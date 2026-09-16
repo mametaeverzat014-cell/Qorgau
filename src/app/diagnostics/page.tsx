@@ -147,7 +147,7 @@ export default function DiagnosticsPage() {
                 country on that screen and watch the list respond.
               </p>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex flex-wrap gap-2 sm:shrink-0">
               <Button variant="secondary" href="/onboarding">
                 <Pencil size={14} /> Edit answers
               </Button>

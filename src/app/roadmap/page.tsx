@@ -57,7 +57,7 @@ export default function RoadmapPage() {
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <NextActionCard />
 
             {/* ---------------- Filters ---------------- */}
@@ -142,7 +142,7 @@ export default function RoadmapPage() {
           </div>
 
           {/* ---------------- Sidebar ---------------- */}
-          <aside className="space-y-4 lg:sticky lg:top-[76px] lg:self-start">
+          <aside className="min-w-0 space-y-4 lg:sticky lg:top-[76px] lg:self-start">
             <ProgressPanel />
             <Card className="p-5">
               <h2 className="text-[14.5px] font-semibold text-ink">How this roadmap was built</h2>

@@ -449,7 +449,11 @@ export default function OnboardingPage() {
                   <div className="mb-3">
                     <button
                       type="button"
-                      onClick={() => set({ openToAnyCountry: !draft.openToAnyCountry })}
+                      /* Selects "anywhere" rather than toggling it. Toggling let the
+                         student turn this off with no country chosen, which left the
+                         step invalid and the Continue button dead with no way out. */
+                      onClick={() => set({ openToAnyCountry: true, preferredCountries: [] })}
+                      aria-pressed={draft.openToAnyCountry}
                       className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13.5px] font-medium transition-all duration-200 ${
                         draft.openToAnyCountry
                           ? 'border-ink bg-ink text-white'
@@ -461,23 +465,22 @@ export default function OnboardingPage() {
                     </button>
                   </div>
                   <ChipMulti
-                    disabled={draft.openToAnyCountry}
                     choices={COUNTRIES.map((c) => ({ value: c, label: c }))}
                     values={draft.preferredCountries}
-                    onToggle={(c: Country) =>
-                      set({
-                        openToAnyCountry: false,
-                        preferredCountries: draft.preferredCountries.includes(c)
-                          ? draft.preferredCountries.filter((x) => x !== c)
-                          : [...draft.preferredCountries, c],
-                      })
-                    }
+                    onToggle={(c: Country) => {
+                      const next = draft.preferredCountries.includes(c)
+                        ? draft.preferredCountries.filter((x) => x !== c)
+                        : [...draft.preferredCountries, c];
+                      // Removing the last country falls back to "anywhere" rather
+                      // than stranding the student in an unanswerable state.
+                      set({ preferredCountries: next, openToAnyCountry: next.length === 0 });
+                    }}
                   />
-                  {!draft.openToAnyCountry && draft.preferredCountries.length === 0 && (
-                    <p className="mt-2.5 text-[13px] text-muted">
-                      Select at least one country, or choose &ldquo;open to anywhere&rdquo;.
-                    </p>
-                  )}
+                  <p className="mt-2.5 text-[13px] text-muted">
+                    {draft.openToAnyCountry
+                      ? 'Every country in our dataset is in scope. Pick specific countries to narrow it.'
+                      : `Scoped to ${draft.preferredCountries.join(', ')}. Deselect them all to open the search back up.`}
+                  </p>
                 </Field>
 
                 <Field label="City size" optional>

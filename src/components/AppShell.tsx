@@ -43,10 +43,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="ap-no-print sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-[60px] w-full max-w-[1180px] items-center gap-6 px-5">
+        <div className="mx-auto flex h-[60px] w-full max-w-[1180px] items-center gap-6 overflow-hidden px-5">
           <Logo />
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden min-w-0 items-center gap-1 md:flex">
             {NAV.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return (
@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-3">
             {hasProfile && (
-              <div className="hidden items-center gap-2.5 sm:flex" title="Share of your application route completed">
+              <div className="hidden items-center gap-2.5 lg:flex" title="Share of your application route completed">
                 <span className="text-[12.5px] text-muted">Route</span>
                 <div className="h-1.5 w-20 overflow-hidden rounded-full bg-surface-soft">
                   <div

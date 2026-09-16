@@ -105,8 +105,8 @@ export function SectionTitle({
   hint?: string;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <div>
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
         <h2 className="text-[19px] font-semibold text-ink">{children}</h2>
         {hint && <p className="mt-1 text-[13.5px] text-muted">{hint}</p>}
       </div>

@@ -353,7 +353,7 @@ export default function UniversityDetailPage() {
         </div>
 
         {/* ---------------- Sources ---------------- */}
-        <Card className="ap-rise mt-4 p-6">
+        <Card className="ap-rise mt-4 p-5 sm:p-6">
           <h2 className="text-[17px] font-semibold text-ink">Official sources</h2>
           <p className="mt-2 max-w-3xl text-[13.5px] leading-[1.7] text-muted">
             Everything factual on this page traces back to one of these pages. Figures marked{' '}
@@ -375,7 +375,7 @@ export default function UniversityDetailPage() {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-start justify-between gap-3 rounded-[11px] border border-line bg-paper p-4 transition-all duration-200 hover:border-line-strong hover:bg-surface-soft"
+                className="group flex min-w-0 items-start justify-between gap-3 rounded-[11px] border border-line bg-paper p-4 transition-all duration-200 hover:border-line-strong hover:bg-surface-soft"
               >
                 <span className="min-w-0">
                   <span className="block text-[13.5px] font-medium text-ink">{label}</span>

@@ -85,7 +85,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {/* ---------------- Readiness ---------------- */}
             <Card className="p-6">
               <SectionTitle
@@ -189,7 +189,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ---------------- Sidebar ---------------- */}
-          <aside className="space-y-4 lg:sticky lg:top-[76px] lg:self-start">
+          <aside className="min-w-0 space-y-4 lg:sticky lg:top-[76px] lg:self-start">
             <ProgressPanel />
 
             {/* Deadlines */}
