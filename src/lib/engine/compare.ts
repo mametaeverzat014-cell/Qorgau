@@ -1,5 +1,6 @@
 import type { Recommendation } from '../types';
 import { mainAdvantage, mainConcern } from './explain';
+import type { ScoreComponents } from '../types';
 import { formatUSD } from './utils';
 
 export interface CompareRow {
@@ -34,6 +35,65 @@ const dateDisplay = (d: string | null) =>
         timeZone: 'UTC',
       })
     : 'Not published';
+
+const DIMENSION_LABELS: Record<keyof ScoreComponents, string> = {
+  financial: 'Cost and affordability',
+  major: 'Programme fit',
+  academic: 'Academic alignment',
+  scholarship: 'Scholarship access',
+  geography: 'Location fit',
+  tests: 'Entry requirements',
+  preference: 'Your stated preferences',
+};
+
+const DIMENSION_KEYS = Object.keys(DIMENSION_LABELS) as (keyof ScoreComponents)[];
+
+/**
+ * The dimension where this university most out-performs the OTHERS in the
+ * comparison. Relative rather than absolute, because "MIT's best feature is its
+ * programme fit" is useless when every option in the table has the same
+ * programme fit — what the student needs to know is where they actually differ.
+ */
+function relativeAdvantage(rec: Recommendation, all: Recommendation[]): string {
+  const others = all.filter((r) => r.university.id !== rec.university.id);
+  if (others.length === 0) return mainAdvantage(rec);
+
+  let bestKey: keyof ScoreComponents | null = null;
+  let bestLead = -Infinity;
+  for (const key of DIMENSION_KEYS) {
+    const rivalBest = Math.max(...others.map((o) => o.components[key]));
+    const lead = rec.components[key] - rivalBest;
+    if (lead > bestLead) {
+      bestLead = lead;
+      bestKey = key;
+    }
+  }
+  // A lead of zero means it ties on everything; fall back to its own strongest side.
+  if (bestKey === null || bestLead <= 0) return `${mainAdvantage(rec)} (ties with the others here)`;
+  return `${DIMENSION_LABELS[bestKey]} (+${Math.round(bestLead)} vs the others)`;
+}
+
+/** The dimension where this university most under-performs the others. */
+function relativeConcern(rec: Recommendation, all: Recommendation[]): string {
+  const others = all.filter((r) => r.university.id !== rec.university.id);
+  if (others.length === 0) return mainConcern(rec);
+
+  let worstKey: keyof ScoreComponents | null = null;
+  let worstDeficit = Infinity;
+  for (const key of DIMENSION_KEYS) {
+    const rivalBest = Math.max(...others.map((o) => o.components[key]));
+    const deficit = rec.components[key] - rivalBest;
+    if (deficit < worstDeficit) {
+      worstDeficit = deficit;
+      worstKey = key;
+    }
+  }
+  if (worstKey === null || worstDeficit >= 0) {
+    const own = mainConcern(rec);
+    return own === 'No major concern' ? 'Nothing weaker than the alternatives' : own;
+  }
+  return `${DIMENSION_LABELS[worstKey]} (${Math.round(worstDeficit)} vs the best here)`;
+}
 
 /**
  * Builds the comparison table.
@@ -213,16 +273,26 @@ export function buildComparison(recs: Recommendation[]): CompareRow[] {
 
   rows.push({
     key: 'advantage',
-    label: 'Main advantage for you',
+    label: 'Where it wins, vs these options',
     better: null,
-    values: recs.map((r) => ({ id: r.university.id, display: mainAdvantage(r), numeric: null })),
+    values: recs.map((r) => ({
+      id: r.university.id,
+      display: relativeAdvantage(r, recs),
+      numeric: null,
+      note: 'Compared against the other universities in this table, not against every university.',
+    })),
   });
 
   rows.push({
     key: 'concern',
-    label: 'Main concern for you',
+    label: 'Where it loses, vs these options',
     better: null,
-    values: recs.map((r) => ({ id: r.university.id, display: mainConcern(r), numeric: null })),
+    values: recs.map((r) => ({
+      id: r.university.id,
+      display: relativeConcern(r, recs),
+      numeric: null,
+      note: 'The dimension where this option is weakest relative to the others in this table.',
+    })),
   });
 
   return rows;

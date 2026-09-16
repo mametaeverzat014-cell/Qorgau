@@ -1,0 +1,191 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ */
+/* AdmitPath design tokens                                             */
+/*                                                                     */
+/* Direction: clean, light, premium, trustworthy. Warm paper rather    */
+/* than clinical white, a single confident indigo accent, generous     */
+/* spacing and large type. No decorative gradients, no random motion.  */
+/* ------------------------------------------------------------------ */
+
+@theme {
+  --color-paper: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f5f5f2;
+
+  --color-ink: #10141c;
+  --color-ink-soft: #3c4452;
+  --color-muted: #6c7686;
+  --color-faint: #98a0ad;
+
+  --color-line: #e7e6e1;
+  --color-line-strong: #d6d5cf;
+
+  --color-brand-50: #eef0ff;
+  --color-brand-100: #dfe3ff;
+  --color-brand-200: #c3caff;
+  --color-brand-400: #6b78ee;
+  --color-brand-500: #3d4fe0;
+  --color-brand-600: #2f3dc4;
+  --color-brand-700: #242e99;
+
+  --color-good-50: #e9f6f0;
+  --color-good-500: #0f7b5a;
+  --color-good-700: #0a5c43;
+
+  --color-warn-50: #fdf3e3;
+  --color-warn-500: #b45309;
+  --color-warn-700: #8a3f07;
+
+  --color-risk-50: #fdeeec;
+  --color-risk-500: #c0392b;
+
+  --font-sans: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --radius-card: 14px;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-700);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Numeric columns line up in tables and score readouts. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------ */
+/* Motion — subtle, purposeful, and respectful of reduced-motion       */
+/* ------------------------------------------------------------------ */
+
+@keyframes ap-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ap-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ap-rise {
+  animation: ap-rise 0.42s var(--ease-soft) both;
+}
+
+.ap-fade {
+  animation: ap-fade 0.3s var(--ease-soft) both;
+}
+
+/* Staggered entrance for result lists — the re-rank is the point, so the
+   cards visibly re-enter when the what-if controls change. */
+.ap-stagger > * {
+  animation: ap-rise 0.4s var(--ease-soft) both;
+}
+.ap-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.ap-stagger > *:nth-child(2) { animation-delay: 45ms; }
+.ap-stagger > *:nth-child(3) { animation-delay: 90ms; }
+.ap-stagger > *:nth-child(4) { animation-delay: 135ms; }
+.ap-stagger > *:nth-child(5) { animation-delay: 180ms; }
+.ap-stagger > *:nth-child(6) { animation-delay: 225ms; }
+.ap-stagger > *:nth-child(7) { animation-delay: 270ms; }
+.ap-stagger > *:nth-child(8) { animation-delay: 315ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom range slider used by the what-if budget control              */
+/* ------------------------------------------------------------------ */
+
+input[type='range'].ap-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-line-strong);
+  outline: none;
+}
+
+input[type='range'].ap-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-brand-500);
+  box-shadow: 0 1px 4px rgb(16 20 28 / 0.18);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-soft);
+}
+
+input[type='range'].ap-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+input[type='range'].ap-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-brand-500);
+  cursor: pointer;
+}
+
+/* Hide the scrollbar on horizontal card rails while keeping them scrollable. */
+.ap-rail {
+  scrollbar-width: none;
+}
+.ap-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* Print: judges sometimes export the comparison. */
+@media print {
+  .ap-no-print { display: none !important; }
+  body { background: white; }
+}
