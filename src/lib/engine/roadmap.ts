@@ -22,6 +22,15 @@ const daysBetween = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime())
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
+/** Human-readable date for task copy — never leak a raw ISO string to a student. */
+const human = (d: Date | string) =>
+  new Date(typeof d === 'string' ? `${d}T00:00:00Z` : d).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+
 function addDays(from: Date, days: number): Date {
   const d = new Date(from.getTime());
   d.setUTCDate(d.getUTCDate() + days);
@@ -94,20 +103,20 @@ export function buildRoadmap(
       title: ielts === null ? 'Register for an IELTS or TOEFL sitting' : `Register for an IELTS retake (target ${needed})`,
       description:
         ielts === null
-          ? `You have no English score on file. Book a test at least 8 weeks before ${earliest ?? 'your first deadline'} so results arrive in time.`
+          ? `You have no English score on file. Book a test at least 8 weeks before ${earliest ? human(earliest) : 'your first deadline'} so results arrive in time.`
           : `Your current level is IELTS ${ielts} and your shortlist needs ${needed}. Book a retake now — results take roughly 2 weeks.`,
       category: 'tests',
-      dueDate: iso(safeDue(addDays(today, 14), today)),
+      dueDate: iso(safeDue(addDays(today, 10), today)),
       priority: 'critical',
       rationale: englishGap.detail,
     });
     push({
       id: 'english-prep',
-      title: 'Complete focused English preparation',
+      title: 'Complete focused English preparation before your sitting',
       description:
-        'Target the weakest band specifically — writing and speaking move fastest with structured practice and feedback.',
+        'Target the weakest band specifically — writing and speaking move fastest with structured practice and feedback. Finish this before the test date you booked, not after.',
       category: 'tests',
-      dueDate: iso(safeDue(addDays(today, 45), today)),
+      dueDate: iso(safeDue(addDays(today, 38), today)),
       priority: 'high',
       rationale: englishGap.detail,
     });
@@ -115,7 +124,7 @@ export function buildRoadmap(
     push({
       id: 'english-send',
       title: 'Send your official English score to each university',
-      description: `Your IELTS ${ielts} equivalent meets requirements, but scores must be sent officially through the test provider — universities do not accept screenshots.`,
+      description: `Your IELTS ${ielts} equivalent meets requirements, but scores must be sent officially through the test provider — universities do not accept screenshots. Your earliest deadline is ${earliest ? human(earliest) : 'coming up'}.`,
       category: 'documents',
       dueDate: iso(safeDue(addDays(earliestDate, -21), today)),
       priority: 'high',
@@ -136,7 +145,7 @@ export function buildRoadmap(
         description: `${needing
           .slice(0, 3)
           .map((r) => r.university.shortName)
-          .join(', ')} ${needing.length > 3 ? `and ${needing.length - 3} more ` : ''}require or recommend an SAT score. Pick the last sitting that still reports before ${earliest ?? 'your deadlines'}.`,
+          .join(', ')} ${needing.length > 3 ? `and ${needing.length - 3} more ` : ''}require or recommend an SAT score. Pick the last sitting that still reports before ${earliest ? human(earliest) : 'your earliest deadline'}.`,
         category: 'tests',
         dueDate: iso(safeDue(addDays(today, 21), today)),
         priority: needing.some((r) => r.university.satPolicy === 'required') ? 'critical' : 'high',

@@ -29,6 +29,15 @@ const JOURNEY = [
   { icon: TrendingUp, title: 'Progress', body: 'One next action, and a route that fills in.' },
 ];
 
+const OUTCOME_PREVIEW = [
+  { label: 'Your profile', value: 'Six readiness dimensions, read from your answers' },
+  { label: 'Matched universities', value: 'Ranked, each with the reasoning behind it' },
+  { label: 'Affordability verdict', value: 'Checked against what your family can pay' },
+  { label: 'Side-by-side comparison', value: 'Where each option wins and loses' },
+  { label: 'Your roadmap', value: 'Dated tasks against real deadlines' },
+  { label: 'Your next action', value: 'One thing to do, and why it comes first' },
+];
+
 export default function WelcomePage() {
   const router = useRouter();
   const { setProfile, hasProfile } = useApp();
@@ -60,8 +69,8 @@ export default function WelcomePage() {
       </header>
 
       {/* ---------------- Hero ---------------- */}
-      <section className="mx-auto w-full max-w-[1180px] px-5 pb-16 pt-14 sm:pt-20">
-        <div className="ap-rise max-w-3xl">
+      <section className="mx-auto grid w-full max-w-[1180px] gap-14 px-5 pb-16 pt-14 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
+        <div className="ap-rise">
           <Badge tone="brand" className="mb-6">
             <span className="mr-0.5 inline-block h-1.5 w-1.5 rounded-full bg-brand-500" />
             Personalized admissions navigator
@@ -92,9 +101,49 @@ export default function WelcomePage() {
           </p>
         </div>
 
-        {/* ---------------- Demo picker ---------------- */}
+        {/* ---------------- Outcome preview ---------------- */}
+        <div className="ap-rise hidden lg:block" style={{ animationDelay: '120ms' }}>
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between border-b border-line bg-surface-soft px-4 py-2.5">
+              <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-faint">
+                What you end up with
+              </span>
+              <span className="tnum text-[11.5px] font-medium text-muted">6 outputs</span>
+            </div>
+            <ol className="divide-y divide-line">
+              {OUTCOME_PREVIEW.map((row, i) => (
+                <li key={row.label} className="flex items-center gap-3 px-4 py-3">
+                  <span className="tnum w-5 shrink-0 text-[11.5px] font-semibold text-faint">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-medium text-ink">{row.label}</span>
+                    <span className="mt-0.5 block text-[12px] leading-[1.45] text-muted">{row.value}</span>
+                  </span>
+                  <ArrowRight size={13} className="shrink-0 text-faint" />
+                </li>
+              ))}
+            </ol>
+            <div className="border-t border-line bg-paper px-4 py-3">
+              <div className="mb-1.5 flex items-baseline justify-between">
+                <span className="text-[12px] font-medium text-ink">Application journey</span>
+                <span className="tnum text-[12px] font-semibold text-ink">32%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-soft">
+                <div className="h-full w-[32%] rounded-full bg-ink" />
+              </div>
+              <p className="mt-2 text-[11.5px] leading-[1.5] text-faint">
+                Illustrative. Your own figures come from your answers and the tasks you complete.
+              </p>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* ---------------- Demo picker ---------------- */}
+      <section className="mx-auto w-full max-w-[1180px] px-5">
         {demoOpen && (
-          <div className="ap-rise mt-10">
+          <div className="ap-rise pb-14">
             <Card className="overflow-hidden">
               <div className="border-b border-line bg-surface-soft px-5 py-3.5">
                 <h2 className="text-[14.5px] font-semibold text-ink">Load a demo student</h2>
