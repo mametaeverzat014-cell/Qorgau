@@ -306,17 +306,28 @@ cp .env.example .env.local
 
 ## Deployment
 
-The app is a standard Next.js application with no database, no auth provider and no required
-environment variables.
+The app is a standard Next.js application with **no database, no auth provider and no required
+environment variables**, so deployment is zero-config.
+
+Import the repository at [vercel.com/new](https://vercel.com/new) and accept every default — the
+framework is auto-detected and the repository's default branch is already the branch that holds the
+code. If the repository is not listed, click *Adjust GitHub App Permissions* and grant Vercel access
+to it.
+
+Or from the CLI:
 
 ```bash
 npm i -g vercel
+vercel login
 vercel --prod
 ```
 
-Or import the repository at [vercel.com/new](https://vercel.com/new) — the defaults are correct and
-no configuration is needed. `ANTHROPIC_API_KEY` is optional; set it as a Vercel environment variable
-if you want the rephrasing button live.
+`ANTHROPIC_API_KEY` is optional. Set it in Settings → Environment Variables only if you want the
+"Rephrase with AI" button live; everything else works without it.
+
+Verified deployment-readiness (see `FINAL_AUDIT.md`): a clean clone installs, type-checks, passes 62
+tests and builds; all 35 university pages pre-render; the production server handles unknown ids and
+nonsense routes without falling over.
 
 ---
 

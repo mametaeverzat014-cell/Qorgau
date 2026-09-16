@@ -9,8 +9,11 @@ build itself** — they are listed here so nothing is missed.
 
 ## Product
 
-- [x] Deployed site is live and reachable
+- [ ] **Deployed site is live and reachable** — the only product item still open.
+      The code is deployment-ready and verified; see **Deploying** below. It needs
+      one action from the repository owner that cannot be automated.
 - [x] Deployed site works from a cold start with no account and no setup
+      (verified against the production build locally: `npm run build && npm start`)
 - [x] Questionnaire completes end to end
 - [x] Diagnostics screen appears before the university list
 - [x] At least 3 recommendations (product returns 6–8)
@@ -54,6 +57,31 @@ build itself** — they are listed here so nothing is missed.
 - [x] `DEMO.md` — ≤3 minute video script with timings
 - [x] `PITCH.md` — content for ≤8 slides
 - [x] `FINAL_AUDIT.md` — self-assessment against each case requirement
+
+## Deploying — 2 minutes, repository owner
+
+The repository is **public**, its default branch is `claude/stoic-thompson-2zfzun`, and the project is
+zero-config: no database, no auth, and **no required environment variables**. Either route works.
+
+**Route A — Vercel dashboard (recommended)**
+1. Go to <https://vercel.com/new>.
+2. Import `mametaeverzat014-cell/Qorgau`. If it is not listed, click *Adjust GitHub App Permissions*
+   and grant Vercel access to that repository.
+3. Accept every default — the framework is auto-detected as Next.js. Click **Deploy**.
+4. Optional: add `ANTHROPIC_API_KEY` under Settings → Environment Variables to enable the
+   "Rephrase with AI" button. The product is fully functional without it.
+
+**Route B — CLI**
+```bash
+npm i -g vercel
+vercel login
+vercel --prod
+```
+
+Every later push to the default branch redeploys automatically under Route A.
+
+- [ ] Deployment completed and the URL opens in a private browser window
+- [ ] Run the judge test scenario in README once against the deployed URL
 
 ## Submission actions — require a human
 
