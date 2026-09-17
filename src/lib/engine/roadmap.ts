@@ -242,8 +242,10 @@ export function buildRoadmap(
         relatedUniversityId: u.id,
         relatedUniversityName: u.name,
         rationale:
-          rec.fits.financial.verdict === 'potentially-affordable-with-aid'
-            ? `${u.shortName} is only affordable for you if this aid comes through.`
+          rec.fits.financial.verdict === 'aid-dependent'
+            ? `${u.shortName} is only affordable for you if you win this competitive award, so treat this application as high-effort and high-risk.`
+            : rec.fits.financial.verdict === 'potentially-affordable-with-aid'
+              ? `${u.shortName} is only affordable for you if this aid comes through.`
             : `Aid here would reduce your family contribution below ${formatUSD(profile.budgetAnnualUSD)}.`,
       });
     }

@@ -1,8 +1,9 @@
-import type {
-  DiagnosticDimension,
-  Diagnostics,
-  ProfileGap,
-  StudentProfile,
+import {
+  requiresAid,
+  type DiagnosticDimension,
+  type Diagnostics,
+  type ProfileGap,
+  type StudentProfile,
 } from '../types';
 import type { RecommendationSet } from './score';
 import { studentIeltsEquivalent } from './matchers';
@@ -179,7 +180,7 @@ export function buildDiagnostics(profile: StudentProfile, set: RecommendationSet
     gaps.push({
       key: 'scholarship-dependence',
       title: 'Your plan depends on winning aid',
-      detail: `${set.results.filter((r) => r.fits.financial.verdict === 'potentially-affordable-with-aid').length} of your recommendations only work if the scholarship comes through. Apply to at least one option you could fund without aid.`,
+      detail: `${set.results.filter((r) => requiresAid(r.fits.financial.verdict)).length} of your recommendations only work if funding comes through, and ${set.results.filter((r) => r.fits.financial.verdict === 'aid-dependent').length} of those depend on winning a competitive award. Apply to at least one option you could fund without aid.`,
       severity: 'high',
     });
   }

@@ -142,6 +142,32 @@ export type ScholarshipAvailability =
   | 'rare-for-international'
   | 'unknown';
 
+/**
+ * How RELIABLE the aid is, independently of how large it is.
+ *
+ * This axis exists because `fullRidePossible` alone was misleading: it grouped
+ * institutions that commit to meeting the full demonstrated need of every
+ * admitted international with institutions that award a handful of competitive
+ * scholarships a year. For a student with no money that difference is the whole
+ * decision, so the engine models it explicitly.
+ */
+export type AidCertainty =
+  /** States it meets the full demonstrated need of admitted internationals. */
+  | 'meets-full-need'
+  /** Low or zero cost is the default for everyone admitted, not a competition. */
+  | 'structural'
+  /** Awards exist and can be large, but you must win them against a field. */
+  | 'competitive'
+  /** Little or nothing published for international undergraduates. */
+  | 'minimal';
+
+export const AID_CERTAINTY_LABELS: Record<AidCertainty, string> = {
+  'meets-full-need': 'Meets full demonstrated need',
+  structural: 'Low cost by default',
+  competitive: 'Competitive award',
+  minimal: 'Minimal aid for internationals',
+};
+
 export type Selectivity = 'highly-selective' | 'selective' | 'moderate' | 'accessible';
 
 export type SatPolicy = 'required' | 'recommended' | 'optional' | 'not-used' | 'unknown';
@@ -186,6 +212,8 @@ export interface University {
   /** Tuition covered, living costs still on the family. */
   fullTuitionPossible: boolean | null;
   needBasedAidForInternationals: boolean | null;
+  /** How dependable the aid above is. See AidCertainty. */
+  aidCertainty: AidCertainty;
   aidNote: string;
 
   minimumIELTS: number | null;
@@ -299,10 +327,21 @@ export interface FitResult {
 }
 
 export type FinancialVerdict =
+  /** Sticker cost already sits inside what the family can pay. */
   | 'strong-financial-fit'
+  /** Needs aid, but the institution commits to meeting need or is low-cost by default. */
   | 'potentially-affordable-with-aid'
+  /** Needs aid, and that aid is a competitive award the student must win. */
+  | 'aid-dependent'
+  /** Out of reach even at the most favourable realistic aid outcome. */
   | 'above-budget'
+  /** Cost data could not be verified. */
   | 'unknown';
+
+/** True when the plan only works if funding comes through. */
+export function requiresAid(verdict: FinancialVerdict): boolean {
+  return verdict === 'potentially-affordable-with-aid' || verdict === 'aid-dependent';
+}
 
 export interface FinancialFitResult extends FitResult {
   verdict: FinancialVerdict;
@@ -312,6 +351,8 @@ export interface FinancialFitResult extends FitResult {
   bestCaseNetCost: number | null;
   /** Annual gap between best-case net cost and what the family can pay. */
   fundingGap: number | null;
+  /** How dependable the aid this verdict relies on actually is. */
+  aidCertainty: AidCertainty;
 }
 
 export type MatchCategory = 'strong' | 'possible' | 'ambitious';

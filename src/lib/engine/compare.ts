@@ -14,14 +14,16 @@ export interface CompareRow {
 
 const FINANCIAL_LABEL: Record<string, string> = {
   'strong-financial-fit': 'Strong financial fit',
-  'potentially-affordable-with-aid': 'Affordable only with aid',
+  'potentially-affordable-with-aid': 'Affordable with dependable aid',
+  'aid-dependent': 'Aid-dependent (competitive)',
   'above-budget': 'Above budget',
   unknown: 'Unknown',
 };
 
 const FINANCIAL_RANK: Record<string, number> = {
-  'strong-financial-fit': 3,
-  'potentially-affordable-with-aid': 2,
+  'strong-financial-fit': 4,
+  'potentially-affordable-with-aid': 3,
+  'aid-dependent': 2,
   unknown: 1,
   'above-budget': 0,
 };

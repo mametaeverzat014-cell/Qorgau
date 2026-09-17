@@ -1,10 +1,11 @@
 import { UNIVERSITIES } from '@/data/universities';
-import type {
-  MatchCategory,
-  Recommendation,
-  ScoreComponents,
-  StudentProfile,
-  University,
+import {
+  requiresAid,
+  type MatchCategory,
+  type Recommendation,
+  type ScoreComponents,
+  type StudentProfile,
+  type University,
 } from '../types';
 import {
   CATEGORY_THRESHOLDS,
@@ -174,7 +175,7 @@ export function getRecommendations(
     results,
     all,
     affordableWithoutAidCount: all.filter((r) => r.fits.financial.verdict === 'strong-financial-fit').length,
-    aidDependentCount: all.filter((r) => r.fits.financial.verdict === 'potentially-affordable-with-aid').length,
+    aidDependentCount: all.filter((r) => requiresAid(r.fits.financial.verdict)).length,
     aboveBudgetCount: all.filter((r) => r.fits.financial.verdict === 'above-budget').length,
     relaxedGeography,
     notice,

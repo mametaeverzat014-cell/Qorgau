@@ -1,4 +1,4 @@
-import type { Recommendation, StudentProfile } from '../types';
+import { requiresAid, type Recommendation, type StudentProfile } from '../types';
 import type { RecommendationSet } from './score';
 import { formatUSD } from './utils';
 
@@ -109,12 +109,8 @@ export function diffRecommendations(
   }
 
   /* Scholarship dependence across the visible list. */
-  const depBefore = before.set.results.filter(
-    (r) => r.fits.financial.verdict === 'potentially-affordable-with-aid',
-  ).length;
-  const depAfter = after.set.results.filter(
-    (r) => r.fits.financial.verdict === 'potentially-affordable-with-aid',
-  ).length;
+  const depBefore = before.set.results.filter((r) => requiresAid(r.fits.financial.verdict)).length;
+  const depAfter = after.set.results.filter((r) => requiresAid(r.fits.financial.verdict)).length;
   if (depAfter !== depBefore) {
     effects.push({
       direction: depAfter < depBefore ? 'up' : 'down',

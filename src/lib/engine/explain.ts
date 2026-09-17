@@ -33,7 +33,14 @@ export function buildSummary(profile: StudentProfile, rec: Recommendation): stri
       break;
     case 'potentially-affordable-with-aid':
       clauses.push(
-        `it publishes financial support that could bring a ${formatUSD(fin.totalAnnualCost)} sticker cost down to roughly ${formatUSD(fin.bestCaseNetCost)} a year`,
+        fin.aidCertainty === 'meets-full-need'
+          ? `it states it meets the full demonstrated need of admitted international students, which brings a ${formatUSD(fin.totalAnnualCost)} sticker cost down to roughly ${formatUSD(fin.bestCaseNetCost)} a year for a family in your position`
+          : `its cost is low by default rather than by competition, at roughly ${formatUSD(fin.bestCaseNetCost)} a year`,
+      );
+      break;
+    case 'aid-dependent':
+      clauses.push(
+        `it could come down from ${formatUSD(fin.totalAnnualCost)} to about ${formatUSD(fin.bestCaseNetCost)} a year, but only by winning a competitive award rather than through guaranteed need-based support`,
       );
       break;
     case 'above-budget':

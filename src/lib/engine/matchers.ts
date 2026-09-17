@@ -109,6 +109,7 @@ export function calculateFinancialFit(profile: StudentProfile, uni: University):
       totalAnnualCost: null,
       bestCaseNetCost: null,
       fundingGap: null,
+      aidCertainty: uni.aidCertainty,
       reasons,
       concerns: ['Cost data for this university could not be verified, so affordability is unknown.'],
       flags: ['cost-unknown'],
@@ -137,6 +138,11 @@ export function calculateFinancialFit(profile: StudentProfile, uni: University):
   let score: number;
   let verdict: FinancialFitResult['verdict'];
 
+  // How dependable the aid is. An institution that meets the full demonstrated
+  // need of everyone it admits is a different proposition from one that awards a
+  // handful of competitive scholarships, even when the headline figure matches.
+  const dependable = uni.aidCertainty === 'meets-full-need' || uni.aidCertainty === 'structural';
+
   if (totalAnnualCost <= budget) {
     verdict = 'strong-financial-fit';
     score = 100;
@@ -153,19 +159,38 @@ export function calculateFinancialFit(profile: StudentProfile, uni: University):
     concerns.push('It sits above your comfortable annual budget, so partial aid would still help.');
     flags.push('affordable-at-ceiling');
   } else if (bestCaseNetCost <= ceiling) {
-    verdict = 'potentially-affordable-with-aid';
-    // How much of the gap the aid has to close, and how reliably it does so.
+    // The gap can close on paper. Whether it closes in practice depends entirely
+    // on how this institution funds international undergraduates.
     const reliance = (totalAnnualCost - ceiling) / totalAnnualCost; // 0..1
-    const reliability =
-      uni.scholarshipAvailability === 'extensive' ? 1 : uni.scholarshipAvailability === 'moderate' ? 0.7 : 0.45;
-    score = Math.round(clamp(40 + (1 - reliance) * 28 + reliability * 24));
-    reasons.push(
-      `Sticker cost is ${formatUSD(totalAnnualCost)} per year, but published aid here could realistically bring it to about ${formatUSD(bestCaseNetCost)} — within your ceiling of ${formatUSD(ceiling)}.`,
-    );
-    concerns.push(
-      'This option only works if you win the scholarship or aid package. Treat it as conditional, not confirmed.',
-    );
-    flags.push('aid-dependent');
+
+    if (dependable) {
+      verdict = 'potentially-affordable-with-aid';
+      score = Math.round(clamp(58 + (1 - reliance) * 22));
+      reasons.push(
+        uni.aidCertainty === 'meets-full-need'
+          ? `Sticker cost is ${formatUSD(totalAnnualCost)} a year, but ${uni.shortName} states it meets the full demonstrated need of admitted international students — so the figure that matters to you is closer to ${formatUSD(bestCaseNetCost)}.`
+          : `Cost here is low by default rather than by competition: ${formatUSD(bestCaseNetCost)} a year is the normal outcome for admitted students, not a prize you have to win.`,
+      );
+      concerns.push(
+        'Funding still depends on being admitted and on your documented family finances. Treat it as conditional until you hold an offer.',
+      );
+      flags.push('aid-dependent', 'aid-dependable');
+    } else {
+      verdict = 'aid-dependent';
+      // Deliberately capped below the dependable case: this is a contest, and
+      // telling a student otherwise is the most damaging thing this engine could do.
+      const reliability = uni.aidCertainty === 'competitive' ? 1 : 0.5;
+      score = Math.round(clamp(30 + (1 - reliance) * 14 + reliability * 8));
+      reasons.push(
+        `Sticker cost is ${formatUSD(totalAnnualCost)} a year. Awards here can reach ${formatUSD(bestCaseNetCost)}, which would bring it inside your ceiling of ${formatUSD(ceiling)}.`,
+      );
+      concerns.push(
+        uni.aidCertainty === 'competitive'
+          ? 'That funding is a competitive award, not a need-based guarantee — a limited number are granted each year. This route only works if you win one, so do not build your plan on it alone.'
+          : 'This university publishes little aid for international undergraduates, so reaching that figure is unlikely. Treat it as a long shot.',
+      );
+      flags.push('aid-dependent', 'aid-competitive');
+    }
   } else {
     verdict = 'above-budget';
     // How far beyond reach — the further, the lower.
@@ -187,6 +212,7 @@ export function calculateFinancialFit(profile: StudentProfile, uni: University):
     totalAnnualCost,
     bestCaseNetCost,
     fundingGap: fundingGap || 0,
+    aidCertainty: uni.aidCertainty,
     reasons,
     concerns,
     flags,

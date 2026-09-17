@@ -22,11 +22,35 @@ const CATEGORY_TONE = {
   ambitious: 'warn',
 } as const;
 
-const VERDICT = {
-  'strong-financial-fit': { label: 'Strong financial fit', tone: 'good' as const },
-  'potentially-affordable-with-aid': { label: 'Affordable with aid', tone: 'warn' as const },
-  'above-budget': { label: 'Above budget', tone: 'risk' as const },
-  unknown: { label: 'Cost unverified', tone: 'neutral' as const },
+const VERDICT: Record<
+  Recommendation['fits']['financial']['verdict'],
+  { label: string; tone: 'good' | 'warn' | 'risk' | 'neutral'; hint: string }
+> = {
+  'strong-financial-fit': {
+    label: 'Strong financial fit',
+    tone: 'good',
+    hint: 'The estimated cost already sits inside what you said your family can pay. No scholarship is strictly required.',
+  },
+  'potentially-affordable-with-aid': {
+    label: 'Affordable with aid',
+    tone: 'warn',
+    hint: 'Needs funding, but this university either meets the full demonstrated need of admitted international students or is low-cost by default — so the support is dependable rather than a contest.',
+  },
+  'aid-dependent': {
+    label: 'Aid-dependent',
+    tone: 'risk',
+    hint: 'Only works if you win a competitive award. A limited number are granted each year, so do not build your plan on this option alone.',
+  },
+  'above-budget': {
+    label: 'Above budget',
+    tone: 'risk',
+    hint: 'Out of reach even at the most favourable realistic aid outcome we can justify from published policy.',
+  },
+  unknown: {
+    label: 'Cost unverified',
+    tone: 'neutral',
+    hint: 'We could not verify cost data for this university, so affordability here is unknown.',
+  },
 };
 
 export function deadlineDisplay(date: string | null) {
@@ -122,7 +146,7 @@ export function UniversityCard({ rec, rank }: { rec: Recommendation; rank?: numb
         <div>
           <p className="text-[11.5px] font-medium uppercase tracking-[0.05em] text-faint">Affordability</p>
           <p className="mt-1">
-            <Badge tone={verdict.tone}>
+            <Badge tone={verdict.tone} title={verdict.hint}>
               <Wallet size={11} strokeWidth={2.2} /> {verdict.label}
             </Badge>
           </p>

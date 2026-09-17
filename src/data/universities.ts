@@ -53,6 +53,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'meets-full-need',
     aidNote:
       'Admission is need-blind for international applicants and Harvard states it meets 100% of demonstrated financial need with grants, not loans. Families below the published income threshold typically pay nothing.',
     minimumIELTS: null,
@@ -98,6 +99,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'meets-full-need',
     aidNote:
       'MIT states that admission is need-blind for all applicants including international students, and that it meets the full demonstrated need of every admitted student.',
     minimumIELTS: 7.0,
@@ -143,6 +145,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'meets-full-need',
     aidNote:
       'Princeton runs a no-loan, grant-only aid programme and applies the same need-based policy to international students. Aid can exceed tuition and cover living costs.',
     minimumIELTS: null,
@@ -188,6 +191,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'meets-full-need',
     aidNote:
       'Yale states its admissions policy is need-blind for all applicants, including international students, and that it meets 100% of demonstrated need.',
     minimumIELTS: 7.0,
@@ -233,6 +237,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'meets-full-need',
     aidNote:
       'Stanford meets the full demonstrated need of admitted international students, but admission for international applicants is need-aware: requesting aid is part of the admission decision.',
     minimumIELTS: 7.0,
@@ -278,6 +283,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'NYU offers a limited number of partial merit scholarships to international students. It does not guarantee to meet demonstrated need for international applicants, so a large family contribution is normally required.',
     minimumIELTS: 7.0,
@@ -323,6 +329,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'As a US public university, UIUC provides very little need-based aid to international undergraduates. A limited number of partial merit awards exist.',
     minimumIELTS: 6.5,
@@ -368,6 +375,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'Partial merit scholarships are available to strong international applicants, but need-based aid for international undergraduates is very limited.',
     minimumIELTS: 6.5,
@@ -413,6 +421,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'ASU offers published, largely automatic merit awards to international freshmen based on GPA and test scores. These are partial — typically a meaningful fraction of tuition, not a full ride.',
     minimumIELTS: 6.5,
@@ -458,6 +467,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'structural',
     aidNote:
       'Berea admits only students with demonstrated financial need and charges no tuition. International students receive a package covering most costs, combined with a required on-campus work programme. The number of international places each year is very small.',
     minimumIELTS: 6.5,
@@ -505,6 +515,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'competitive',
     aidNote:
       'SNU operates scholarship schemes for international undergraduates including full-tuition and living-stipend awards for outstanding applicants, plus the government-funded Global Korea Scholarship route. Volume is limited and competitive.',
     minimumIELTS: 6.5,
@@ -550,6 +561,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'structural',
     aidNote:
       'KAIST undergraduates, including international students, are normally covered by a national scholarship for tuition; additional living stipends are available for high performers. Students who fall below the required GPA can lose the award.',
     minimumIELTS: 6.5,
@@ -595,6 +607,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'UIC awards merit-based entrance scholarships that range from partial to full tuition. Living costs are normally not covered, so a family contribution is still required.',
     minimumIELTS: 6.5,
@@ -640,6 +653,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'Korea University grants tiered tuition reductions to international undergraduates, commonly in the 30–100% range, based on academic record and English proficiency.',
     minimumIELTS: 6.5,
@@ -685,6 +699,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'structural',
     aidNote:
       'POSTECH offers large scholarship packages to admitted international undergraduates, frequently covering tuition in full and contributing to dormitory costs.',
     minimumIELTS: 6.5,
@@ -730,6 +745,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'SKKU offers tiered entrance scholarships for international undergraduates based on academic and language credentials, typically covering part or all of tuition.',
     minimumIELTS: 5.5,
@@ -777,6 +793,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'HKU runs a large entrance-scholarship scheme for non-local students, with awards ranging from partial tuition to full tuition plus a living allowance. Awards are merit-based and are considered automatically with the application.',
     minimumIELTS: 6.5,
@@ -822,6 +839,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'HKUST offers merit entrance scholarships to international students up to and including full tuition plus a hostel and living allowance for top applicants.',
     minimumIELTS: 6.5,
@@ -867,6 +885,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'CUHK offers entrance scholarships to outstanding non-local applicants, including a limited number of full scholarships covering tuition and hostel fees.',
     minimumIELTS: 6.5,
@@ -912,6 +931,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'CityU awards entrance scholarships to strong non-local applicants, commonly covering part or all of tuition. Living costs generally remain the family’s responsibility.',
     minimumIELTS: 6.5,
@@ -959,6 +979,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'Two distinct mechanisms: the MOE Tuition Grant (a large fee subsidy tied to a post-graduation work bond in Singapore) and a small number of highly competitive full scholarships such as the ASEAN and Science & Technology awards.',
     minimumIELTS: 6.5,
@@ -1004,6 +1025,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'NTU offers the MOE Tuition Grant plus a set of competitive named scholarships (including the Nanyang Scholarship) that can cover tuition and a living allowance.',
     minimumIELTS: 6.0,
@@ -1051,6 +1073,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'competitive',
     aidNote:
       'PEAK students can apply for university and government-linked scholarships, including MEXT-related routes, that cover tuition and provide a monthly living stipend. Places are limited.',
     minimumIELTS: 6.5,
@@ -1098,6 +1121,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'Germany keeps tuition low by design rather than through scholarships. Awards such as Deutschlandstipendium exist but are small, competitive and partial. Budget for living costs, not fees.',
     minimumIELTS: 6.5,
@@ -1143,6 +1167,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'competitive',
     aidNote:
       'The Justus & Louise van Effen Excellence Scholarship is a full scholarship for outstanding non-EU applicants, but only a handful are awarded each year. Most international students self-fund.',
     minimumIELTS: 6.5,
@@ -1188,6 +1213,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'The Amsterdam Merit Scholarship provides partial support to a small number of non-EU students. Most international students fund studies themselves.',
     minimumIELTS: 6.5,
@@ -1233,6 +1259,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'competitive',
     aidNote:
       'Bocconi operates both merit awards for international students and an income-based fee-reduction system, with a number of full-tuition-plus-housing packages for outstanding applicants. Financial documentation is required.',
     minimumIELTS: 6.5,
@@ -1278,6 +1305,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'competitive',
     aidNote:
       'CEU is unusually scholarship-dense: a large share of its international students receive tuition awards, and full packages with a living stipend are available to strong candidates.',
     minimumIELTS: 6.5,
@@ -1323,6 +1351,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'Scholarship volume is low, but total cost is already low. Studying in Czech removes tuition entirely, which is a realistic route for students willing to take a language year.',
     minimumIELTS: 6.0,
@@ -1368,6 +1397,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'Institutional scholarships are limited, though Polish government schemes (e.g. NAWA programmes) exist for selected countries. The main affordability lever here is the low sticker price.',
     minimumIELTS: 6.0,
@@ -1413,6 +1443,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'competitive',
     aidNote:
       'Bologna publishes annual study grants for international students that combine a fee waiver with a cash contribution, alongside the regional ER-GO need-based scheme. Financial documentation from the home country is mandatory.',
     minimumIELTS: 6.0,
@@ -1458,6 +1489,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: false,
     needBasedAidForInternationals: false,
+    aidCertainty: 'minimal',
     aidNote:
       'UK universities generally offer only partial scholarships to international undergraduates. Edinburgh has a small number of named awards; most international students self-fund.',
     minimumIELTS: 6.5,
@@ -1503,6 +1535,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: false,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'competitive',
     aidNote:
       'The Émile Boutmy Scholarship targets non-EU students and ranges from a partial contribution to full tuition. Fees themselves are also income-scaled, which stacks with the scholarship.',
     minimumIELTS: 6.5,
@@ -1550,6 +1583,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'meets-full-need',
     aidNote:
       'NYU Abu Dhabi meets the full demonstrated need of admitted students regardless of citizenship, and its packages routinely include tuition, housing and travel. This makes sticker price a poor guide to what a high-need student actually pays.',
     minimumIELTS: 7.0,
@@ -1597,6 +1631,7 @@ export const UNIVERSITIES: University[] = [
     fullRidePossible: true,
     fullTuitionPossible: true,
     needBasedAidForInternationals: true,
+    aidCertainty: 'structural',
     aidNote:
       'Most students study on a state educational grant covering tuition, accommodation and a monthly stipend. Instruction is entirely in English with partner-university curricula.',
     minimumIELTS: 6.0,
