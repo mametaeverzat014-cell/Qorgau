@@ -12,3 +12,10 @@ coverage/
 next-env.d.ts
 .DS_Store
 npm-debug.log*
+
+# Ingestion pipeline intermediates. Raw and extracted data are large,
+# reproducible and non-authoritative; only the registry and approved data are
+# part of the audit trail.
+data/raw/
+data/extracted/
+data/freshness-report.json

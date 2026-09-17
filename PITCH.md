@@ -129,10 +129,19 @@ unknown and never as zero, and we model no admission probability at all.
 **Plus one line:**
 > A badge a judge can disprove in thirty seconds is worth less than an honest one.
 
-**Speaker note (25s):** Every cost is an estimate and labelled as one. Anything unverifiable stays
+**Also on slide, one line:**
+> Official sources → validation → **human approval** → dataset. Ingestion proposes; people decide.
+
+**Speaker note (30s):** Every cost is an estimate and labelled as one. Anything unverifiable stays
 null rather than becoming a plausible number. We also model whether aid is *dependable* or a contest
 you must win — which is why, for a student with $5,000, Harvard outranks TU Delft despite a $91,000
 sticker versus $37,000.
+
+Behind that sits a data pipeline. Decision-critical values are meant to be tied to official sources,
+timestamped and validated, and no automated step can write to production — approval is explicit and
+per field. Be precise about status: the pipeline is built and tested, with twelve red-team cases that
+all fail honestly, but it has not been run against live sources yet, so today every record is
+hand-curated and the product says so.
 
 ---
 

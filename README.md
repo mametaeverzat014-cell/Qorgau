@@ -218,6 +218,36 @@ Source types used, in order of preference:
 
 No aggregators are used where an official source exists.
 
+### Data ingestion pipeline
+
+Decision-critical values are not meant to live forever as hand-curated numbers.
+`scripts/university-data/` is a controlled ingestion pipeline that ties them to official sources:
+
+```
+Official university sources -> Controlled ingestion (allow-listed domains only)
+  -> Deterministic extraction -> Validation -> Human approval -> Versioned dataset -> Engine
+```
+
+The property that matters is what it cannot do: **no command except `approve` writes to production
+data, and `approve` refuses without an explicit `--yes` from someone who has seen the diff.**
+Ingestion proposes; people decide. `verified()` throws if constructed without evidence, and a derived
+value inherits the weakest input status, so a verified figure plus an unverified one cannot produce a
+verified total.
+
+**Current state, stated plainly: the pipeline is built and tested but has not been run against live
+sources**, because the build environment blocks all outbound network access. **0 of 35** institutions
+currently carry source-backed approved fields, every record remains hand-curated, and detail pages say
+**"Hand-curated record"** rather than implying verification that has not happened. Registry page URLs
+are `null` rather than guessed — guessing them is what produced 404ing links once already.
+
+What is proven: 59 tests covering extraction, validation and both gates, plus twelve red-team
+scenarios — monthly housing read as annual, pages listing two academic years, domestic-only
+scholarships, stale SAT text beside current policy, documents from an old cycle, aggregator domains,
+hostile redirects, Cloudflare challenges, low confidence, blank pages, disagreeing official sources,
+missing currency — **all of which fail honestly** rather than producing a confident wrong answer.
+
+Full detail, including exact commands: **[DATA_PIPELINE.md](./DATA_PIPELINE.md)**.
+
 ### Accuracy and data provenance
 
 The first rubric category is Accuracy and Verifiability, and it is also the first tie-breaker, so this
@@ -347,15 +377,19 @@ Verification:
 
 ```bash
 npm run typecheck   # tsc --noEmit, strict mode
-npm run test        # 124 Vitest tests
+npm run test        # 183 Vitest tests
 npm run build       # production build
 npm run verify      # all three in sequence
 npm run check:links # real HTTP check of every source URL (needs internet)
+
+npm run data:status          # ingestion pipeline state
+npm run data:coverage        # dataset coverage report
+npm run data:check-freshness # broken / changed / current sources (needs internet)
 ```
 
 ### Testing
 
-124 unit tests across five suites, plus browser verification against the production build.
+183 unit tests across six suites, plus browser verification against the production build.
 
 | Suite | Tests | What it guards |
 | --- | --- | --- |
@@ -363,6 +397,7 @@ npm run check:links # real HTTP check of every source URL (needs internet)
 | `sensitivity.test.ts` | 17 | Behavioural parameter sensitivity — monotonicity, verdict flips, set turnover, and that components × weights reconstruct the headline score |
 | `product.test.ts` | 30 | Generated copy contains no raw dates, no `undefined`/`NaN`, and **never claims an admission probability**; what-if diffs; comparison discrimination; nine degenerate profiles |
 | `dataset.test.ts` | 17 | Data quality: unique ids, provenance completeness, nulls not coerced to zero, no negative or implausible money, score ranges, deadlines inside the cycle, aid-claim consistency |
+| `pipeline.test.ts` | 59 | Ingestion: evidence preservation, derived values inheriting the weakest status, domain allow-listing and SSRF, the per-unit and ambiguous-year traps, aid over-claims, and the approval gate refusing a 0.99-confidence candidate with no evidence |
 | `storage.test.ts` | 23 | Corrupt persisted state — wrong types, NaN, unknown enums, prototype pollution, 10KB strings — must stay both well-shaped and scoreable |
 
 Measured in a headless browser against `next start`: **0 of 10** corrupt-storage cases crash the app

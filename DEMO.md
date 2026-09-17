@@ -78,7 +78,10 @@ Rehearse once — the timings are tight but real.
 >
 > There's deliberately no 'Published' badge, because we didn't re-verify these against live
 > institutional pages — and a badge you could disprove in thirty seconds is worth less than an honest
-> one."
+> one.
+>
+> This record says 'Hand-curated'. That's the pipeline talking: ingestion is built and tested, but it
+> hasn't been pointed at live sources yet, so nothing here claims to be verified.""
 
 ---
 
