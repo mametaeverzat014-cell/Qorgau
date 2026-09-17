@@ -179,10 +179,21 @@ READING** rather than classified. Every discovered PDF is marked
 ### What `discover` prints
 
 Pages inspected, sitemap URLs discovered, non-content URLs skipped, candidates
-considered, pages fetched, pages classified and total requests; then **FOUND**
-with each URL, its score and the reason it was accepted; then an explicit **NOT
-FOUND** list. `--debug` adds every candidate with its HTTP status, content type,
-per-kind scores and the accept/reject reason.
+considered, pages fetched, pages classified, pages whose chrome was stripped,
+candidates left unfetched and total requests.
+
+Then **FOUND**, and for each result: the URL, `relevanceScore`,
+`authorityScore`, `finalScore`, `sourceRole`, `audience`, `temporalStatus` with
+any published or updated date, why it was selected, how it was discovered, and
+the runner-up URL with the reason it lost.
+
+Then **NOT FOUND**, distinguishing "nothing matched" from "a candidate was found
+and refused", with the refused URL and the reason. Then any PDFs needing manual
+reading, any cross-domain candidates, and a coverage note.
+
+`--debug` adds every candidate with its fetch priority, HTTP status, content
+type, per-kind relevance/authority scores, role, audience, temporal status and
+the accept/reject reason.
 
 ### Domains
 
@@ -202,6 +213,165 @@ npm run data:add-domain -- --university=<id> --domain=example-aid.org --official
 Each entry is seeded with exactly one domain — the one its `officialUrl` points
 at. It is deliberately not expanded from memory; a person checks that a domain
 really is official before approving it.
+
+---
+
+---
+
+## Source selection
+
+Finding pages was the first problem. Choosing the *right* page is the second,
+and it is the one a live run exposed.
+
+### What went wrong the second time
+
+With the sitemap bug fixed, a real run against MIT found 11 of 12 page kinds.
+Most of them were wrong:
+
+| kind | what it picked |
+| --- | --- |
+| `international_financial_aid` | a blog post, "An Early History of International Students at MIT" |
+| `english_requirements` | a blog post, "Hwæt! Did you know that you can study Old English at MIT?" |
+| `testing_policy` | a 2022 announcement that the SAT/ACT requirement was being reinstated |
+| `tuition` | a blog post announcing a tuition-free income threshold |
+| `cost_of_attendance` | a student blog post titled "At what cost?" |
+| `deadlines` | the **transfer** deadlines page |
+| `financial_aid` | a blog post about an aid tracking portlet |
+
+Four causes, all general:
+
+1. **Keyword relevance is not authority.** Nothing distinguished the
+   institution's standing page from somebody's post about the same topic.
+2. **Two concepts on one page is not one topic.** "International students" in a
+   history section and "scholarship fund" three paragraphs later made a page
+   about neither look like a page about both.
+3. **Site chrome counted as content.** Almost every MIT page scored 7-8.5 for
+   admissions, because the global navigation on every page says "how to apply",
+   "first year applicants" and "admissions office". The classifier was reading
+   the template.
+4. **Recall was being optimised.** 11/12 with false positives is worse than
+   7/12 that are right.
+
+### Relevance and authority are scored separately
+
+**Relevance** is what the page is about: `<title>` ×3, H1-H3 ×2, body ×1 (capped
+at four distinct hits), path ×1, sitemap context ×0.5. Phrases count for more
+than single words.
+
+**Authority** is whether it is the institution's standing statement:
+
+| signal | effect |
+| --- | --- |
+| canonical path segment (`/apply/`, `/tuition/`, `/financial-aid/`, `/deadlines/`, …) | +2 each, capped +4 |
+| path segment matching this kind's usual location | +2 |
+| article path segment (`/blogs/`, `/news/`, `/entry/`, `/archive/`, …) | −4, −1 per extra, capped −6 |
+| article markers in the body ("posted on", "filed under", "leave a comment") | −2 |
+| dated permalink (`/2019/04/…`) | −2 |
+| audience, on kinds where it matters | first-year +2, undergraduate +1, transfer −4, graduate −7 |
+
+Authority is judged on **whole path segments**, never substrings. This matters:
+`/news/admissions-office-moves-building` contains the word "admissions", but its
+segments are `news` and `admissions office moves building` — so it earns no
+canonical credit. An article path earns none at all, however many institutional
+words its slug contains.
+
+`finalScore = relevance + authority`, and **ranking is role-first**: a canonical
+page beats a blog post whatever the keyword scores say.
+
+### Site chrome is stripped before classification
+
+`mainContent()` removes `<nav>`, `<header>`, `<footer>`, `<aside>`, scripts,
+styles and forms, then removes container elements whose class or id marks them
+as furniture (menu, sidebar, breadcrumb, cookie banner, related posts, share
+widgets, newsletter signup, pagination…), then prefers `<main>` or `<article>`
+when the page marks one. A regression test takes a dining-menus page whose
+navigation advertises "how to apply", shows it scores as an admissions page on
+raw HTML, and shows its admissions content signal drops to **zero** once the
+chrome is gone.
+
+### Both concepts must be in the same place
+
+Combined categories declare a `coRequire` pair, and the two groups must appear in
+one semantic region: the title, one heading section, or a sliding 300-character
+window **inside** a section. A window is never allowed to span a section
+boundary — that is exactly how "international students" and "scholarship fund"
+nearly passed as international financial aid.
+
+`english_requirements` additionally requires a proficiency term (IELTS, TOEFL,
+Duolingo, "proficiency", "language requirement"). The word "English" alone is
+never evidence, and `hardNegative` terms — "old english", "english literature",
+"english department", "creative writing" — disqualify a page outright, at any
+score.
+
+### First-year, not transfer
+
+Every page gets an `audience`: `first_year`, `transfer`, `graduate`,
+`international`, `all_undergraduate` or `unknown`. The product's default
+applicant is a first-year undergraduate, so on audience-sensitive kinds
+(admissions, deadlines, testing, English, programs) first-year and
+all-undergraduate pages outrank transfer pages both in authority and in the
+final ordering. A transfer page is demoted, not disqualified — if it is all that
+exists, it is recorded *and labelled* `audience: transfer`.
+
+### Announcements are not policy
+
+Every page gets a `temporalStatus`: `current`, `dated`, `historical` or
+`unknown`, alongside `publishedDate`, `updatedDate` and `academicYear` read from
+the document's own metadata. A page is `current` only if it states the current
+academic year or was updated within twelve months; `historical` if it is an
+article using change-announcement language ("we are reinstating", "starting
+in…", "effective from") or is more than two years old.
+
+`unknown` is the default and is not a failure. Claiming a page is current when
+nothing on it says so would be inventing the one property that matters most for
+a policy that changes every cycle.
+
+**A `historical` source is never selected for a decision-critical field**, at any
+score. That is precisely what made an announcement that the SAT requirement was
+being reinstated look like a testing policy source.
+
+### Source roles, and precision over recall
+
+Every candidate carries a `sourceRole`:
+
+| role | meaning |
+| --- | --- |
+| `canonical` | a standing institutional page at a canonical location |
+| `supporting` | a standing page, but not at a canonical location |
+| `fallback` | a blog, news or article page |
+| `historical` | an article announcing a change rather than stating policy |
+
+For the decision-critical fields — tuition, cost of attendance, financial aid,
+international financial aid, testing policy, English requirements, deadlines — a
+`fallback` source is selected only when nothing better exists **and** it clears a
+raised bar (`FALLBACK_MIN`), and a `historical` source is never selected. When a
+candidate is refused this way it is still reported, under **NOT FOUND**, with the
+URL and the reason, so a human can look at it.
+
+`7/12 high-confidence canonical sources` is the intended outcome. `11/12` with
+false positives is not.
+
+### Budget
+
+Candidates are ordered **before** any request is spent, using path canonicality,
+audience and kind relevance. URLs the site actually publishes in its sitemap are
+a strictly higher tier than conventional-path guesses — a guess that *looks*
+canonical used to outrank a real URL, which is how a live run spent all 45 page
+fetches on 404s and never reached the pages in its own sitemap. The budget itself
+is unchanged.
+
+### Cross-domain
+
+Discovery never widens an allow-list. When an already-trusted page links to a
+host that shares a name token with the institution, that host is recorded as a
+**domain candidate** with the link that produced it, the anchor text, and the
+`add-domain` command that would approve it. Nothing is fetched from it. A link is
+not proof of ownership — official pages link to payment processors and testing
+agencies too.
+
+Discovery also prints a coverage note naming the current allow-list and the kinds
+with no approved source, because "not found" and "not reachable from this one
+domain" are different problems.
 
 ---
 
@@ -305,7 +475,7 @@ Consequently:
   does not propose a replacement from memory and does not edit the dataset. A
   variant that responds is a lead, not a confirmation.
 
-What is proven: 99 tests exercise discovery, extraction, validation, the security
+What is proven: 126 tests exercise discovery, extraction, validation, the security
 gate and the approval gate, including an end-to-end fixture run from HTML through to a
 verdict. Twelve red-team scenarios — monthly housing, mixed academic years,
 domestic-only scholarships, stale SAT policy text, old PDFs, aggregator domains,
@@ -318,21 +488,28 @@ access. Nothing else is required.
 
 ### Known limitations
 
-1. **PDFs are fetched but not parsed.** No text layer and no OCR ship with this
+1. **Extraction still reads whole-page text.** Chrome stripping is applied
+   during discovery, where it decides which page wins. The extractors that read
+   money, IELTS bands and deadlines out of a fetched page have not been switched
+   over to `mainContent()` yet, because extraction was explicitly out of scope
+   for this round. That is the next change to make.
+2. **PDFs are fetched but not parsed.** No text layer and no OCR ship with this
    pipeline, because a half-working PDF parser produces confident-looking
    garbage. PDFs are flagged for manual reading instead.
-2. **Discovery has not been run against a live site.** It is exercised against
-   realistic fixtures — a sitemap index, three child sitemaps, four real-shaped
-   pages, a news page, two PDFs and a hostile hostname — but fixtures are not
-   the internet. Against MIT from this environment every request returns HTTP
-   403 at the egress proxy, and discovery correctly reports **0/12 found** and
-   records nothing.
-3. **Each institution starts with one allowed domain.** Real institutions spread
+3. **The ranking layer has not been run against a live site.** Discovery itself
+   has: a live MIT run found 11/12 kinds in 58 requests with no sitemap treated
+   as evidence. The source-selection rules that replace those false positives
+   are exercised only against fixtures — a sitemap index, four child sitemaps,
+   canonical pages, five blog posts reproducing each real false positive, a
+   chrome-heavy page, two PDFs and a hostile hostname. Fixtures are not the
+   internet. From this environment every request to a university domain returns
+   HTTP 403 at the egress proxy, so the next live run is the real test.
+4. **Each institution starts with one allowed domain.** Real institutions spread
    admissions, the registrar, student financial services and institutional
    research across several. Until a person approves the others with
    `data:add-domain`, discovery cannot see them — which is a deliberate
    trade: a narrow allow-list finds less and invents nothing.
-4. **No LLM extraction layer.** The optional-LLM design in the brief is
+5. **No LLM extraction layer.** The optional-LLM design in the brief is
    deliberately not implemented: every field the engine scores on can be parsed
    deterministically, and adding a model would introduce a candidate source that
    cannot be audited for no accuracy gain.

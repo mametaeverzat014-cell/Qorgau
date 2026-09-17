@@ -124,28 +124,69 @@ async function cmdDiscover() {
   console.log(`  pages classified by content:  ${d.pagesClassified}`);
   console.log(`  HTTP requests total:          ${d.requests}${d.budgetExhausted ? c.y('  (budget exhausted)') : ''}`);
 
+  console.log(`  pages whose chrome was stripped: ${d.chromeStrippedPages}`);
+  console.log(`  candidates left unfetched:     ${d.candidatesSkippedForBudget}`);
+
   console.log(c.b('\nFOUND'));
   const foundEntries = Object.entries(result.found);
   if (foundEntries.length === 0) console.log(c.dim('  nothing'));
   for (const [kind, page] of foundEntries) {
     entry.pages[kind] = page.url;
-    console.log(`  ${c.g(kind)}  ${c.dim(`score ${page.score}`)}`);
+    const role = page.sourceRole === 'canonical' ? c.g(page.sourceRole)
+      : page.sourceRole === 'supporting' ? page.sourceRole : c.y(page.sourceRole);
+    console.log(`  ${c.g(kind)}`);
     console.log(`    ${page.url}`);
-    if (page.title) console.log(c.dim(`    title: ${page.title}`));
-    console.log(c.dim(`    why:   ${page.reasons.join('; ')}`));
-    console.log(c.dim(`    via:   ${page.discoveredVia}  ·  signal: ${page.contentSignal}`));
+    if (page.title) console.log(c.dim(`    title:      ${page.title}`));
+    console.log(`    relevance ${page.relevanceScore}  ·  authority ${page.authorityScore}  ·  final ${page.score}`);
+    console.log(`    role ${role}  ·  audience ${page.audience}  ·  ${page.temporalStatus}`
+      + (page.publishedDate ? c.dim(`  (published ${page.publishedDate})`) : '')
+      + (page.updatedDate ? c.dim(`  (updated ${page.updatedDate})`) : ''));
+    console.log(c.dim(`    why:        ${page.whySelected}`));
+    console.log(c.dim(`    via:        ${page.discoveredVia}  ·  signal: ${page.contentSignal}`));
+    if (page.runnerUp) {
+      console.log(c.dim(`    runner-up:  ${page.runnerUp.url}`));
+      console.log(c.dim(`                lost because: ${page.runnerUp.whyItLost} (${page.runnerUp.score}, ${page.runnerUp.role})`));
+    } else {
+      console.log(c.dim('    runner-up:  none — nothing else qualified'));
+    }
     if (page.requiresManualReading) console.log(c.y('    PDF — values must be read by a human, nothing here parses PDF text'));
   }
 
   console.log(c.b('\nNOT FOUND'));
   if (result.notFound.length === 0) console.log(c.dim('  —'));
   for (const kind of result.notFound) {
-    console.log(`  ${c.y(kind)} ${c.dim('— no page on an approved domain both matched and said so in its own content')}`);
+    const rejected = result.rejectedForQuality.find((x) => x.kind === kind);
+    if (rejected) {
+      console.log(`  ${c.y(kind)} ${c.dim('— a candidate was found and refused')}`);
+      console.log(c.dim(`      ${rejected.url}`));
+      console.log(c.dim(`      ${rejected.reason}`));
+    } else {
+      console.log(`  ${c.y(kind)} ${c.dim('— no page on an approved domain both matched and said so in its own content')}`);
+    }
   }
 
   if (result.manualReview.length) {
     console.log(c.b('\nFOR MANUAL READING'));
     for (const m of result.manualReview) console.log(`  ${m.url}\n    ${c.dim(m.reason)}`);
+  }
+
+  if (result.domainCandidates.length) {
+    console.log(c.b('\nDOMAIN CANDIDATES — not trusted, not fetched'));
+    console.log(c.dim('  Hosts an already-trusted page linked to that share a name with this institution.'));
+    console.log(c.dim('  A link is not proof of ownership. Check each one yourself before approving it.'));
+    for (const dc of result.domainCandidates) {
+      console.log(`  ${dc.host}  ${c.dim(`(${dc.occurrences} link${dc.occurrences === 1 ? '' : 's'}, e.g. "${dc.anchors[0] ?? dc.examples[0]}")`)}`);
+      console.log(c.dim(`      seen on ${dc.linkedFrom}`));
+      console.log(c.dim(`      to approve: npm run data:add-domain -- --university=${entry.id} --domain=${dc.host} --yes`));
+    }
+  }
+
+  if (result.notFound.length > 0) {
+    console.log(c.b('\nCOVERAGE NOTE'));
+    console.log(`  Some categories may require another official domain for this institution.`);
+    console.log(`  Current allow-list: ${entry.allowedDomains.join(', ')}`);
+    console.log(`  No approved source found for: ${result.notFound.join(', ')}`);
+    console.log(c.dim('  Nothing outside the allow-list was fetched, and no domain was added automatically.'));
   }
 
   if (debug) {
@@ -154,7 +195,9 @@ async function cmdDiscover() {
       const mark = row.decision === 'accepted' ? c.g('✓') : row.decision === 'rejected' ? c.r('✗') : c.y('·');
       console.log(`  ${mark} [${row.stage}] ${row.url}`);
       console.log(c.dim(`      status: ${row.status ?? '—'}   type: ${row.contentType ?? '—'}   decision: ${row.decision}`));
+      if (row.priority !== undefined) console.log(c.dim(`      fetch priority: ${row.priority}`));
       if (row.scores?.length) console.log(c.dim(`      scores: ${row.scores.join('  ')}`));
+      if (row.role) console.log(c.dim(`      role: ${row.role}   audience: ${row.audience}   ${row.temporalStatus}`));
       if (row.reason) console.log(c.dim(`      reason: ${row.reason}`));
     }
   }

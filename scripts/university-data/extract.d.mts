@@ -83,3 +83,6 @@ export function extractTestingPolicy(text: string): TestingPolicyResult;
 export function extractAidPolicy(text: string): AidSignals;
 export function extractDeadlines(text: string): DeadlineCandidate[];
 export function extractCommonDataSet(text: string): CommonDataSetResult;
+
+export function mainContent(html: string | null): { html: string; usedMain: boolean; stripped: boolean };
+export function headingSections(html: string | null): Array<{ heading: string; body: string }>;

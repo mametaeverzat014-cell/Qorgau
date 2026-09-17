@@ -33,6 +33,131 @@ export function htmlToText(html) {
     .trim();
 }
 
+/* ------------------------------------------------------------------ */
+/* Main content vs site chrome                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Container tags whose contents are site furniture rather than the page.
+ *
+ * This matters more than it looks. A live run over MIT gave almost every page
+ * an admissions score of 7-8.5, because the global navigation on every page
+ * contains "how to apply", "first year applicants" and "admissions office". A
+ * classifier reading whole-page text is really reading the template.
+ */
+const CHROME_TAGS = ['nav', 'header', 'footer', 'aside', 'script', 'style', 'noscript', 'svg', 'form', 'iframe', 'template', 'dialog'];
+
+/** class/id fragments that mark a block as furniture on essentially every CMS. */
+const CHROME_ATTR =
+  /(?:class|id)\s*=\s*["'][^"']*(?:^|[\s_-])(nav|navbar|navigation|menu|masthead|header|footer|sidebar|side-bar|breadcrumb|cookie|consent|banner|related|related-posts|share|sharing|social|widget|promo|cta|skip|skip-link|site-search|searchform|subscribe|newsletter|comment|comments|pagination|pager|toolbar|utility|global|offcanvas|drawer|megamenu|site-info|colophon)(?:[\s_-]|["'])/i;
+
+const CONTAINER_TAGS = ['div', 'section', 'ul', 'ol', 'aside', 'table'];
+
+/** Index just past the close tag matching the element opening at `start`. */
+function matchingClose(html, start, tag) {
+  const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'gi');
+  re.lastIndex = start;
+  let depth = 0;
+  for (let m; (m = re.exec(html)); ) {
+    if (m[1] === '/') {
+      depth--;
+      if (depth <= 0) return m.index + m[0].length;
+    } else if (!/\/>\s*$/.test(m[0])) {
+      depth++;
+    }
+  }
+  return -1;
+}
+
+/** Removes every element with the given tag name, nesting included. */
+function removeElements(html, tag) {
+  const open = new RegExp(`<${tag}\\b[^>]*>`, 'i');
+  let out = html;
+  for (let guard = 0; guard < 200; guard++) {
+    const m = out.match(open);
+    if (!m || m.index === undefined) break;
+    const end = matchingClose(out, m.index, tag);
+    // An unclosed tag is a malformed page, not a licence to delete the rest of
+    // it: drop the tag itself and carry on.
+    out = end === -1
+      ? out.slice(0, m.index) + ' ' + out.slice(m.index + m[0].length)
+      : out.slice(0, m.index) + ' ' + out.slice(end);
+  }
+  return out;
+}
+
+/** Removes container elements whose class or id marks them as chrome. */
+function removeChromeContainers(html) {
+  let out = html;
+  for (let guard = 0; guard < 300; guard++) {
+    const re = new RegExp(`<(${CONTAINER_TAGS.join('|')})\\b[^>]*>`, 'gi');
+    let cut = null;
+    for (let m; (m = re.exec(out)); ) {
+      if (!CHROME_ATTR.test(m[0])) continue;
+      const end = matchingClose(out, m.index, m[1]);
+      cut = { start: m.index, end: end === -1 ? m.index + m[0].length : end };
+      break;
+    }
+    if (!cut) break;
+    out = out.slice(0, cut.start) + ' ' + out.slice(cut.end);
+  }
+  return out;
+}
+
+/** The first element with this tag, contents included. */
+function firstElement(html, tag) {
+  const m = html.match(new RegExp(`<${tag}\\b[^>]*>`, 'i'));
+  if (!m || m.index === undefined) return null;
+  const end = matchingClose(html, m.index, tag);
+  return end === -1 ? null : html.slice(m.index, end);
+}
+
+/**
+ * Narrows a page to the content it is actually about.
+ *
+ * Strips furniture, then prefers <main> or <article> when the page marks one.
+ * `usedMain` records whether that landmark existed, because a page with no
+ * landmark and no strippable chrome may still be mostly template — the caller
+ * should know which it got rather than assume.
+ */
+export function mainContent(html) {
+  if (!html) return { html: '', usedMain: false, stripped: false };
+  let h = html;
+  for (const tag of CHROME_TAGS) h = removeElements(h, tag);
+  const beforeChrome = h.length;
+  h = removeChromeContainers(h);
+  const landmark = firstElement(h, 'main') ?? firstElement(h, 'article');
+  return {
+    html: landmark ?? h,
+    usedMain: Boolean(landmark),
+    stripped: h.length < beforeChrome || h.length < html.length,
+  };
+}
+
+/**
+ * Splits a document into heading-scoped sections.
+ *
+ * Used for co-occurrence: "international students" in one section and
+ * "financial aid" in another is not a page about aid for international
+ * students, however close the two are in the raw text.
+ */
+export function headingSections(html) {
+  if (!html) return [];
+  const out = [];
+  const re = /<h([1-3])[^>]*>([\s\S]*?)<\/h\1>/gi;
+  let last = 0;
+  let heading = '';
+  for (let m; (m = re.exec(html)); ) {
+    const body = htmlToText(html.slice(last, m.index));
+    if (heading || body) out.push({ heading, body });
+    heading = htmlToText(m[2]).trim();
+    last = m.index + m[0].length;
+  }
+  const tail = htmlToText(html.slice(last));
+  if (heading || tail) out.push({ heading, body: tail });
+  return out.filter((s) => s.heading || s.body);
+}
+
 export function pageTitle(html) {
   return html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim().slice(0, 200) ?? null;
 }
