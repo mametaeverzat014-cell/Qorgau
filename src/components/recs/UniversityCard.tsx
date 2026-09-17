@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import {
   AlertTriangle,
   ArrowUpRight,
   CalendarDays,
   Check,
+  ChevronDown,
   GitCompareArrows,
   MapPin,
   Wallet,
 } from 'lucide-react';
+import { MATCH_WEIGHTS } from '@/lib/weights';
 import { CATEGORY_LABELS, CATEGORY_TOOLTIP } from '@/lib/engine/explain';
 import { formatUSD } from '@/lib/engine/utils';
 import { useApp } from '@/lib/store';
 import type { Recommendation } from '@/lib/types';
-import { Badge, Button, Card, ScoreRing, Tooltip } from '@/components/ui';
+import { Badge, Button, Card, ProgressBar, ScoreRing, Tooltip } from '@/components/ui';
 
 const CATEGORY_TONE = {
   strong: 'good',
@@ -69,8 +72,19 @@ export function daysUntil(date: string | null, now = new Date()) {
   return Math.round((new Date(`${date}T00:00:00Z`).getTime() - now.getTime()) / 86_400_000);
 }
 
+const COMPONENT_ROWS: { key: keyof typeof MATCH_WEIGHTS; label: string }[] = [
+  { key: 'financial', label: 'Financial fit' },
+  { key: 'academic', label: 'Academic alignment' },
+  { key: 'major', label: 'Programme match' },
+  { key: 'geography', label: 'Location fit' },
+  { key: 'scholarship', label: 'Scholarship compatibility' },
+  { key: 'preference', label: 'Your preferences' },
+  { key: 'tests', label: 'Entry requirements' },
+];
+
 export function UniversityCard({ rec, rank }: { rec: Recommendation; rank?: number }) {
   const { compareIds, toggleCompare } = useApp();
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const u = rec.university;
   const fin = rec.fits.financial;
   const verdict = VERDICT[fin.verdict];
@@ -194,8 +208,53 @@ export function UniversityCard({ rec, rank }: { rec: Recommendation; rank?: numb
         )}
       </div>
 
+      {/* ---- score breakdown: collapsed so the card stays scannable ---- */}
+      <div className="mt-4 border-t border-line pt-3">
+        <button
+          onClick={() => setShowBreakdown((v) => !v)}
+          aria-expanded={showBreakdown}
+          className="flex w-full items-center justify-between gap-2 text-left text-[12.5px] font-medium text-muted transition-colors hover:text-ink"
+        >
+          <span>Why {rec.score}%? See the seven scores</span>
+          <ChevronDown
+            size={14}
+            className={`shrink-0 transition-transform duration-200 ${showBreakdown ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {showBreakdown && (
+          <div className="ap-fade mt-3 space-y-2">
+            {COMPONENT_ROWS.map(({ key, label }) => {
+              const value = rec.components[key];
+              return (
+                <div key={key}>
+                  <div className="mb-1 flex items-baseline justify-between gap-2">
+                    <span className="text-[12px] text-ink-soft">
+                      {label}
+                      <span className="ml-1.5 text-[11px] text-faint">
+                        {Math.round(MATCH_WEIGHTS[key] * 100)}%
+                      </span>
+                    </span>
+                    <span className="tnum text-[12px] font-semibold text-ink">{value}</span>
+                  </div>
+                  <ProgressBar
+                    percent={value}
+                    tone={value >= 75 ? 'good' : value >= 50 ? 'brand' : 'ink'}
+                    height={4}
+                  />
+                </div>
+              );
+            })}
+            <p className="pt-1 text-[11.5px] leading-[1.5] text-faint">
+              Each dimension is scored independently, then combined with the fixed weights shown.
+              This measures alignment with your profile — it is not a probability of admission.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* ---- actions ---- */}
-      <div className="mt-5 flex items-center gap-2">
+      <div className="mt-4 flex items-center gap-2">
         <Button size="sm" variant="secondary" href={`/university/${u.id}`} className="flex-1">
           View details <ArrowUpRight size={13} />
         </Button>
@@ -204,10 +263,16 @@ export function UniversityCard({ rec, rank }: { rec: Recommendation; rank?: numb
           variant={inCompare ? 'primary' : 'quiet'}
           onClick={() => toggleCompare(u.id)}
           disabled={compareFull}
-          title={compareFull ? 'You can compare up to four universities at a time' : undefined}
+          title={
+            compareFull
+              ? 'Your comparison already holds four universities. Remove one to add this.'
+              : inCompare
+                ? 'Remove from comparison'
+                : 'Add to comparison'
+          }
         >
           {inCompare ? <Check size={13} strokeWidth={2.6} /> : <GitCompareArrows size={13} />}
-          {inCompare ? 'Comparing' : 'Compare'}
+          {inCompare ? 'Comparing' : compareFull ? 'Compare full' : 'Compare'}
         </Button>
       </div>
     </Card>

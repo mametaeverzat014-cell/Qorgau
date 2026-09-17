@@ -22,6 +22,7 @@ export default function RecommendationsPage() {
     recommendations: savedSet,
     setProfile,
     compareIds,
+    clearCompare,
   } = useApp();
 
   /* The what-if profile is a local overlay: the saved profile is only touched
@@ -128,6 +129,24 @@ export default function RecommendationsPage() {
           <Card className="mt-4 flex gap-3 border-warn-500/25 bg-warn-50 p-4">
             <Info size={16} className="mt-[2px] shrink-0 text-warn-700" strokeWidth={2} />
             <p className="text-[13.5px] leading-[1.65] text-warn-700">{set.notice}</p>
+          </Card>
+        )}
+
+        {/* ---------------- Comparison capacity ---------------- */}
+        {compareIds.length >= 4 && (
+          <Card className="ap-fade mt-4 flex flex-col items-start justify-between gap-3 border-brand-100 bg-brand-50 px-5 py-3.5 sm:flex-row sm:items-center">
+            <p className="text-[13.5px] leading-[1.55] text-brand-700">
+              <strong className="font-semibold">Comparison is full.</strong> Four universities is the
+              most that stays readable side by side — remove one to add another.
+            </p>
+            <div className="flex shrink-0 gap-2">
+              <Button size="sm" variant="ghost" onClick={clearCompare}>
+                Clear selection
+              </Button>
+              <Button size="sm" href="/compare">
+                <GitCompareArrows size={13} /> Open comparison
+              </Button>
+            </div>
           </Card>
         )}
 
