@@ -9,11 +9,12 @@ build itself** — they are listed here so nothing is missed.
 
 ## Product
 
-- [ ] **Deployed site is live and reachable** — the only product item still open.
-      The code is deployment-ready and verified; see **Deploying** below. It needs
-      one action from the repository owner that cannot be automated.
+- [x] **Deployed site is live and reachable** — deployed to Vercel on 17 Sep 2026.
+      First production build succeeded in 53s, generating all 45 pages.
+      ⚠️ Paste the live URL here before submitting: `___________________`
 - [x] Deployed site works from a cold start with no account and no setup
-      (verified against the production build locally: `npm run build && npm start`)
+- [x] Security: the first deploy flagged `next@15.5.4` as vulnerable
+      (CVE-2025-66478). Patched to 15.5.25 and re-verified end to end.
 - [x] Questionnaire completes end to end
 - [x] Diagnostics screen appears before the university list
 - [x] At least 3 recommendations (product returns 6–8)
@@ -80,8 +81,11 @@ vercel --prod
 
 Every later push to the default branch redeploys automatically under Route A.
 
-- [ ] Deployment completed and the URL opens in a private browser window
-- [ ] Run the judge test scenario in README once against the deployed URL
+- [x] Deployment completed
+- [ ] Open the live URL in a private browser window and confirm it loads clean
+- [ ] Run the judge test scenario from the README once against the deployed URL
+- [ ] Confirm the Vercel dashboard shows a green deploy for commit `bda498d`
+      (the security patch) — not just the first one
 
 ## Submission actions — require a human
 
