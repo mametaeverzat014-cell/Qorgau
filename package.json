@@ -2,7 +2,7 @@
   "name": "admitpath-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "AdmitPath AI — personalized university admissions navigator (LOCUSCASE2)",
+  "description": "AdmitPath AI \u2014 personalized university admissions navigator (LOCUSCASE2)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "lucide-react": "0.544.0",
-    "next": "15.5.4",
+    "next": "15.5.25",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },
@@ -24,8 +24,8 @@
     "@types/node": "22.18.1",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
-    "eslint": "9.35.0",
-    "eslint-config-next": "15.5.4",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.25",
     "playwright": "^1.55.0",
     "tailwindcss": "4.1.13",
     "typescript": "5.9.2",
