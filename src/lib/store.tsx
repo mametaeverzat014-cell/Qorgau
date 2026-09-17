@@ -10,37 +10,21 @@ import {
   type ReactNode,
 } from 'react';
 import { EMPTY_PROFILE } from './demo';
+import {
+  STORAGE_KEYS,
+  clearAllStoredData,
+  ensureStorageVersion,
+  readCompare,
+  readProfile,
+  readShortlist,
+  readTaskMap,
+  sanitizeProfile,
+  write,
+} from './storage';
 import { buildDiagnostics } from './engine/diagnostics';
 import { buildRoadmap, calculateProgress, getNextAction } from './engine/roadmap';
 import { getRecommendations, type RecommendationSet } from './engine/score';
 import type { Diagnostics, NextAction, ProgressSnapshot, RoadmapTask, StudentProfile } from './types';
-
-const KEYS = {
-  profile: 'admitpath.profile.v1',
-  tasks: 'admitpath.tasks.v1',
-  shortlist: 'admitpath.shortlist.v1',
-  compare: 'admitpath.compare.v1',
-} as const;
-
-/** localStorage access that never throws — private mode, quota, SSR. */
-function readJSON<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeJSON(key: string, value: unknown) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* Storage unavailable — the app stays fully usable for this session. */
-  }
-}
 
 interface AppState {
   /** False until localStorage has been read, so the UI can avoid a hydration flash. */
@@ -79,22 +63,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /* ---- hydrate from localStorage once on mount ---- */
   useEffect(() => {
-    setProfileState(readJSON<StudentProfile>(KEYS.profile, EMPTY_PROFILE));
-    setCompleted(readJSON<Record<string, boolean>>(KEYS.tasks, {}));
-    setShortlist(readJSON<string[]>(KEYS.shortlist, []));
-    setCompareIds(readJSON<string[]>(KEYS.compare, []));
+    // Drop anything written by an incompatible earlier build first, then read
+    // through validators so corrupt storage can never reach the engine.
+    ensureStorageVersion();
+    setProfileState(readProfile());
+    setCompleted(readTaskMap());
+    setShortlist(readShortlist());
+    setCompareIds(readCompare());
     setReady(true);
   }, []);
 
   const setProfile = useCallback((p: StudentProfile) => {
-    setProfileState(p);
-    writeJSON(KEYS.profile, p);
+    const safe = sanitizeProfile(p);
+    setProfileState(safe);
+    write(STORAGE_KEYS.profile, safe);
   }, []);
 
   const updateProfile = useCallback((patch: Partial<StudentProfile>) => {
     setProfileState((prev) => {
       const next = { ...prev, ...patch };
-      writeJSON(KEYS.profile, next);
+      write(STORAGE_KEYS.profile, next);
       return next;
     });
   }, []);
@@ -103,7 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCompleted((prev) => {
       const next = { ...prev, [id]: !prev[id] };
       if (!next[id]) delete next[id];
-      writeJSON(KEYS.tasks, next);
+      write(STORAGE_KEYS.tasks, next);
       return next;
     });
   }, []);
@@ -111,7 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toggleShortlist = useCallback((id: string) => {
     setShortlist((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      writeJSON(KEYS.shortlist, next);
+      write(STORAGE_KEYS.shortlist, next);
       return next;
     });
   }, []);
@@ -120,20 +108,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCompareIds((prev) => {
       if (prev.includes(id)) {
         const next = prev.filter((x) => x !== id);
-        writeJSON(KEYS.compare, next);
+        write(STORAGE_KEYS.compare, next);
         return next;
       }
       // The comparison table is only readable up to four columns.
       if (prev.length >= 4) return prev;
       const next = [...prev, id];
-      writeJSON(KEYS.compare, next);
+      write(STORAGE_KEYS.compare, next);
       return next;
     });
   }, []);
 
   const clearCompare = useCallback(() => {
     setCompareIds([]);
-    writeJSON(KEYS.compare, []);
+    write(STORAGE_KEYS.compare, []);
   }, []);
 
   const clearAllData = useCallback(() => {
@@ -141,13 +129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCompleted({});
     setShortlist([]);
     setCompareIds([]);
-    if (typeof window !== 'undefined') {
-      try {
-        Object.values(KEYS).forEach((k) => window.localStorage.removeItem(k));
-      } catch {
-        /* ignore */
-      }
-    }
+    clearAllStoredData();
   }, []);
 
   const hasProfile = Boolean(profile.completedAt);
