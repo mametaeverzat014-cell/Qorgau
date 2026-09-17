@@ -4,10 +4,11 @@ import { join } from 'node:path';
 
 import {
   ACCEPT_THRESHOLD, candidatePriority, classifyDocument, classifyPdf, coOccurs,
-  collectDomainCandidates, currentAcademicYear, detectAudience, detectTemporal,
-  discoverPages, isNonContentUrl, isSitemapUrl, pageDates, parseRobotsSitemaps,
-  parseSitemap, pathAuthority, pathSegments, pdfTitle, scoreKind, scoreUrlPath,
-  FALLBACK_MIN, KIND_SIGNALS,
+  collectDomainCandidates, compareCandidates, currentAcademicYear, detectAudience,
+  detectTemporal, discoverPages, institutionTokens, isAcademicHost,
+  isInstitutionalCandidate, isNonContentUrl, isSitemapUrl, normalizeUrl, pageDates,
+  parseRobotsSitemaps, parseSitemap, pathAuthority, pathSegments, pdfTitle,
+  registrableDomain, scoreKind, scoreUrlPath, FALLBACK_MIN, KIND_SIGNALS,
 } from '../scripts/university-data/discovery.mjs';
 import { headings, headingSections, htmlToText, mainContent, pageTitle } from '../scripts/university-data/extract.mjs';
 import { isAllowedUrl } from '../scripts/university-data/safety.mjs';
@@ -57,6 +58,9 @@ const ROUTES: Record<string, [string | Buffer, string]> = {
   'https://nbitadmissions.org/apply/first-year/deadlines': [fixture('apply-first-year-deadlines.html'), HTML],
   'https://nbitadmissions.org/apply/transfer/deadlines': [fixture('apply-transfer-deadlines.html'), HTML],
   'https://nbitadmissions.org/dining/menus': [fixture('dining-menus.html'), HTML],
+  'https://nbitadmissions.org/apply/first-year/checklist': [fixture('apply-first-year-checklist.html'), HTML],
+  'https://nbitadmissions.org/afford/cost-aid-basics/calculator': [fixture('afford-calculator.html'), HTML],
+  'https://nbitadmissions.org/discover/the-northbridge-education/majors-minors': [fixture('discover-majors-minors.html'), HTML],
   'https://nbitadmissions.org/blogs/entry/international-students/': [fixture('blog-international-history.html'), HTML],
   'https://nbitadmissions.org/blogs/entry/studying-old-english-at-northbridge/': [fixture('blog-old-english.html'), HTML],
   'https://nbitadmissions.org/blogs/entry/we-are-reinstating-our-sat-act-requirement/': [fixture('blog-sat-reinstated.html'), HTML],
@@ -86,6 +90,7 @@ async function fakeFetch(url: string, allowedDomains: string[], _opts?: { accept
 const ENTRY = normalizeEntry({
   id: 'northbridge',
   officialName: 'Northbridge Institute of Technology',
+  shortName: 'NBIT',
   officialRootUrl: 'https://nbitadmissions.org',
   officialDomains: ['nbitadmissions.org'],
   pages: Object.fromEntries(PAGE_KINDS.map((k) => [k, null])),
@@ -439,8 +444,10 @@ describe('Source selection: the failures a live run produced', () => {
     const r = await discovery();
     expect(r.found.cost_of_attendance?.url).toBe('https://nbitadmissions.org/apply/tuition-and-fees');
     expect(r.found.cost_of_attendance?.sourceRole).toBe('canonical');
-    expect(r.found.cost_of_attendance?.runnerUp?.url).toBe('https://nbitadmissions.org/blogs/entry/at-what-cost/');
-    expect(r.found.cost_of_attendance?.runnerUp?.whyItLost).toMatch(/canonical/);
+    // The blog is a candidate and is not the one chosen.
+    expect(r.found.cost_of_attendance?.alternatives).toBeGreaterThan(0);
+    expect(r.found.cost_of_attendance?.url).not.toContain('/blogs/');
+    expect(r.found.cost_of_attendance?.runnerUp?.whyItLost).toMatch(/canonical source outranks/);
   });
 
   it('D2: the canonical page wins even when the blog scores higher on keywords', () => {
@@ -458,14 +465,18 @@ describe('Source selection: the failures a live run produced', () => {
     const r = await discovery();
     expect(r.found.testing_policy?.url).toBe('https://nbitadmissions.org/apply/testing-requirements');
     expect(r.found.testing_policy?.temporalStatus).toBe('current');
-    expect(r.found.testing_policy?.runnerUp?.url)
-      .toBe('https://nbitadmissions.org/blogs/entry/we-are-reinstating-our-sat-act-requirement/');
+    expect(Object.values(r.found).map((p) => p.url))
+      .not.toContain('https://nbitadmissions.org/blogs/entry/we-are-reinstating-our-sat-act-requirement/');
 
     const announcement = doc('blog-sat-reinstated.html', 'https://nbitadmissions.org/blogs/entry/we-are-reinstating-our-sat-act-requirement/');
     const s = scoreKind('testing_policy', announcement, NOW);
     expect(s.temporal?.temporalStatus).toBe('historical');
     expect(s.role).toBe('historical');
     expect(s.temporal?.publishedDate).toBe('2022-03-28');
+    // It is keyword-relevant and still refused: being about a policy change is
+    // not being the policy.
+    expect(s.relevance).toBeGreaterThan(10);
+    expect(s.accepted).toBe(false);
   });
 
   it('F: global navigation does not make every page an admissions page', async () => {
@@ -498,10 +509,23 @@ describe('Source selection: the failures a live run produced', () => {
     expect(text).not.toContain('English language requirements');
   });
 
-  it('G: a blog post is still retained when nothing canonical exists', async () => {
+  it('G: a blog post is retained as the runner-up, not discarded', async () => {
     const r = await discovery();
-    // There is no standing academics page on this fixture site, and programs is
-    // not decision-critical, so the blog is kept and labelled for what it is.
+    expect(r.found.programs?.runnerUp?.url).toBe('https://nbitadmissions.org/blogs/entry/majors/');
+    expect(r.found.programs?.runnerUp?.role).toBe('fallback');
+  });
+
+  it('G2: and is selected when nothing canonical exists for a non-critical kind', async () => {
+    // Same site with the majors page removed. `programs` is not
+    // decision-critical, so a detailed blog post about majors is better than
+    // nothing — kept, and labelled for what it is.
+    const r = await discoverPages(ENTRY, {
+      now: NOW,
+      fetchImpl: (url: string, domains: string[], opts?: { accept?: string }) =>
+        url === 'https://nbitadmissions.org/discover/the-northbridge-education/majors-minors'
+          ? Promise.resolve({ ok: false as const, status: 404, reason: 'HTTP 404', url })
+          : fakeFetch(url, domains, opts),
+    });
     expect(r.found.programs?.url).toBe('https://nbitadmissions.org/blogs/entry/majors/');
     expect(r.found.programs?.sourceRole).toBe('fallback');
     expect(r.found.programs?.authorityScore).toBeLessThan(0);
@@ -510,7 +534,11 @@ describe('Source selection: the failures a live run produced', () => {
   it('H: no canonical source means NOT FOUND, not a false positive', async () => {
     // Same site with the canonical cost page removed: the cost blog is the only
     // candidate left, and a blog is not the institution's statement on cost.
-    const hidden = new Set(['https://nbitadmissions.org/apply/tuition-and-fees']);
+    const hidden = new Set([
+      'https://nbitadmissions.org/apply/tuition-and-fees',
+      'https://nbitadmissions.org/apply/tuition-and-fees/',
+      'https://nbitadmissions.org/afford/cost-aid-basics/calculator',
+    ]);
     const r = await discoverPages(ENTRY, {
       now: NOW,
       fetchImpl: (url: string, domains: string[], opts?: { accept?: string }) =>
@@ -527,6 +555,236 @@ describe('Source selection: the failures a live run produced', () => {
     expect(rejected?.reason).toMatch(/announces a change in policy/);
     // It is still reported, so a human can look at it.
     expect(r.fallbacks.cost_of_attendance?.url).toBe('https://nbitadmissions.org/blogs/entry/at-what-cost/');
+  });
+});
+
+
+/* ================================================================== */
+/* The second live run's ranking issues                                */
+/* ================================================================== */
+
+describe('Currency is a bounded bonus, not a veto', () => {
+  const doc = (file: string, url: string) => {
+    const raw = fixture(file);
+    const main = mainContent(raw);
+    return {
+      url, html: raw, title: pageTitle(raw) ?? '',
+      headingList: headings(main.html), text: htmlToText(main.html),
+      sections: headingSections(main.html),
+    };
+  };
+
+  it('a strong undated canonical page beats a thin dated one', async () => {
+    // Real failure: an essays page (final 16, "current") was selected over a
+    // deadlines-and-requirements page (final 21.5, canonical, "unknown"),
+    // because temporal status sorted above the score.
+    const rich = scoreKind('admissions', doc('apply-first-year.html', 'https://nbitadmissions.org/apply/first-year'), NOW);
+    const thin = scoreKind('admissions', doc('apply-first-year-checklist.html', 'https://nbitadmissions.org/apply/first-year/checklist'), NOW);
+
+    expect(rich.temporal?.temporalStatus).toBe('unknown');
+    expect(thin.temporal?.temporalStatus).toBe('current');
+    expect(thin.relevance).toBeLessThan(rich.relevance!);
+    expect(rich.score).toBeGreaterThan(thin.score);
+    expect(compareCandidates(
+      { ...rich, role: rich.role } as never, { ...thin, role: thin.role } as never,
+    )).toBeLessThan(0);
+
+    const r = await discovery();
+    expect(r.found.admissions?.url).toBe('https://nbitadmissions.org/apply/first-year');
+    expect(r.found.admissions?.temporalStatus).toBe('unknown');
+  });
+
+  it('being current is worth a couple of points, not a tier', () => {
+    const base = { url: 'https://x.edu/tuition', title: 'Tuition', headingList: ['Tuition'], text: 'Tuition and fees.' };
+    const undated = scoreKind('tuition', base, NOW);
+    const current = scoreKind('tuition', { ...base, text: 'Tuition and fees for the 2026-27 academic year.' }, NOW);
+    expect(current.score - undated.score!).toBeLessThanOrEqual(3);
+    expect(current.score).toBeGreaterThan(undated.score);
+  });
+
+  it('unknown is not treated as stale', () => {
+    const undated = scoreKind('tuition', {
+      url: 'https://x.edu/tuition', title: 'Tuition', headingList: ['Tuition'], text: 'Tuition and fees.',
+    }, NOW);
+    // No penalty at all — an undated standing page is not evidence of staleness.
+    expect(undated.reasons.join(' ')).not.toMatch(/unknown -/);
+    expect(undated.accepted).toBe(true);
+  });
+
+  it('still refuses a historical source for a decision-critical field', async () => {
+    const r = await discovery();
+    for (const kind of Object.keys(KIND_SIGNALS)) {
+      if (!KIND_SIGNALS[kind].decisionCritical) continue;
+      expect(r.found[kind]?.temporalStatus, kind).not.toBe('historical');
+    }
+  });
+});
+
+describe('Canonicality is a property of a path for a kind', () => {
+  it('an /apply/ page gets no canonical advantage as a programs source', () => {
+    // Real failure: an application-essays page outranked a majors-and-minors
+    // page for `programs`, because /apply/ was on a site-wide canonical list.
+    const essays = pathAuthority('https://nbitadmissions.org/apply/firstyear/essays-activities-academics', 'programs');
+    expect(essays.canonicalHits).toEqual([]);
+    expect(essays.score).toBe(0);
+
+    // The same path is canonical for the kind it actually is canonical for.
+    expect(pathAuthority('https://nbitadmissions.org/apply/firstyear/essays-activities-academics', 'admissions').score)
+      .toBeGreaterThan(0);
+  });
+
+  it('prefers a majors page over an application page for programs', async () => {
+    const r = await discovery();
+    expect(r.found.programs?.url).toBe('https://nbitadmissions.org/discover/the-northbridge-education/majors-minors');
+    expect(r.found.programs?.sourceRole).toBe('canonical');
+    expect(r.found.programs?.runnerUp?.url).toBe('https://nbitadmissions.org/blogs/entry/majors/');
+  });
+
+  it('reads the topic from the front of a compound slug', () => {
+    expect(pathAuthority('https://x.edu/discover/majors-minors', 'programs').canonicalHits).toContain('majors');
+    expect(pathAuthority('https://x.edu/apply/tuition-and-fees', 'tuition').canonicalHits).toContain('tuition');
+    // ...but not from the middle or end of one.
+    expect(pathAuthority('https://x.edu/apply/essays-activities-academics', 'programs').canonicalHits).toEqual([]);
+  });
+
+  it('does not read a blog "entry" out of "entry-requirements"', () => {
+    expect(pathAuthority('https://x.edu/admissions/entry-requirements', 'admissions').blogPath).toBe(false);
+    expect(pathAuthority('https://x.edu/blogs/entry/x', 'admissions').blogPath).toBe(true);
+  });
+});
+
+describe('Cost of attendance needs a cost statement, not the word "cost"', () => {
+  const doc = (file: string, url: string) => {
+    const raw = fixture(file);
+    const main = mainContent(raw);
+    return {
+      url, html: raw, title: pageTitle(raw) ?? '',
+      headingList: headings(main.html), text: htmlToText(main.html),
+      sections: headingSections(main.html),
+    };
+  };
+
+  it('rejects a page that only says "cost"', () => {
+    const s = scoreKind('cost_of_attendance', {
+      url: 'https://x.edu/afford/cost', title: 'Cost', headingList: ['Cost'],
+      text: 'Northbridge is committed to keeping cost down. Read about our approach to cost.',
+    }, NOW);
+    expect(s.accepted).toBe(false);
+    expect(s.reasons.join(' ')).toMatch(/no specific cost of attendance statement/);
+  });
+
+  it('accepts a page that names the components', () => {
+    const s = scoreKind('cost_of_attendance', {
+      url: 'https://x.edu/afford/budget', title: 'Student Budget', headingList: ['Student budget'],
+      text: 'The student budget covers tuition, fees, housing and food for the year.',
+    }, NOW);
+    expect(s.accepted).toBe(true);
+  });
+
+  it('demotes a calculator that prints no figures to supporting at most', async () => {
+    const s = scoreKind('cost_of_attendance', doc('afford-calculator.html', 'https://nbitadmissions.org/afford/cost-aid-basics/calculator'), NOW);
+    expect(s.role).toBe('supporting');
+    expect(s.reasons.join(' ')).toMatch(/stating no figures/);
+
+    const r = await discovery();
+    expect(r.found.cost_of_attendance?.url).toBe('https://nbitadmissions.org/apply/tuition-and-fees');
+    expect(r.found.cost_of_attendance?.sourceRole).toBe('canonical');
+    expect(r.found.cost_of_attendance?.runnerUp?.url).toBe('https://nbitadmissions.org/afford/cost-aid-basics/calculator');
+    expect(r.found.cost_of_attendance?.runnerUp?.whyItLost).toMatch(/canonical source outranks supporting/);
+  });
+
+  it('keeps a calculator canonical when it does print the figures', () => {
+    const s = scoreKind('cost_of_attendance', {
+      url: 'https://x.edu/afford/cost-calculator', title: 'Cost calculator',
+      headingList: ['Cost of attendance'],
+      text: 'Use the calculator below. The published cost of attendance for 2026-27 is $71,900, of which tuition is $48,300 and housing is $14,000.',
+    }, NOW);
+    expect(s.role).toBe('canonical');
+  });
+});
+
+describe('A page is never its own runner-up', () => {
+  it('normalises trailing slashes, case and fragments', () => {
+    expect(normalizeUrl('https://X.edu/afford/access-affordability/'))
+      .toBe(normalizeUrl('https://x.edu/afford/access-affordability'));
+    expect(normalizeUrl('https://x.edu/a#b')).toBe('https://x.edu/a');
+    expect(normalizeUrl('https://x.edu/')).toBe('https://x.edu/');
+    expect(normalizeUrl('not a url')).toBe('not a url');
+  });
+
+  it('fetches one page once, however many candidate URLs point at it', async () => {
+    const r = await discovery();
+    // The fixture sitemap lists /apply/tuition-and-fees both with and without a
+    // trailing slash, exactly as a real one did.
+    expect(r.diagnostics.duplicatePagesSkipped).toBeGreaterThan(0);
+  });
+
+  it('never reports a result as its own runner-up', async () => {
+    const r = await discovery();
+    for (const [kind, page] of Object.entries(r.found)) {
+      if (!page.runnerUp) continue;
+      expect(normalizeUrl(page.runnerUp.url), kind).not.toBe(normalizeUrl(page.url));
+    }
+  });
+});
+
+describe('Domain candidates need a verifiable institutional relationship', () => {
+  it('recognises a restricted academic registry', () => {
+    expect(isAcademicHost('sfs.mit.edu')).toBe(true);
+    expect(isAcademicHost('www.ox.ac.uk')).toBe(true);
+    expect(isAcademicHost('nus.edu.sg')).toBe(true);
+    expect(isAcademicHost('dimitristheblogger.blogspot.com')).toBe(false);
+    expect(isAcademicHost('example.org')).toBe(false);
+    expect(isAcademicHost('localhost')).toBe(false);
+  });
+
+  it('derives the registrable domain through two-part suffixes', () => {
+    expect(registrableDomain('sfs.northbridge.edu')).toBe('northbridge.edu');
+    expect(registrableDomain('registry.admin.ox.ac.uk')).toBe('ox.ac.uk');
+  });
+
+  it('accepts a subdomain of the institution on an academic registry', () => {
+    const tokens = institutionTokens({
+      officialName: 'Northbridge Institute of Technology', shortName: 'NBIT',
+      allowedDomains: ['nbitadmissions.org'],
+    } as never);
+    expect(isInstitutionalCandidate('sfs.northbridge.edu', { nameTokens: tokens }).ok).toBe(true);
+    expect(isInstitutionalCandidate('ir.northbridge.edu', { nameTokens: tokens }).ok).toBe(true);
+  });
+
+  it('rejects a blog host whose name merely contains the acronym', () => {
+    // Real result: "dimitristheblogger" contains the letters m-i-t, and a
+    // substring test presented dimitristheblogger.blogspot.com as a possible
+    // MIT property.
+    const tokens = institutionTokens({
+      officialName: 'Northbridge Institute of Technology', shortName: 'NBIT',
+      allowedDomains: ['nbitadmissions.org'],
+    } as never);
+    expect('nbitterlemonblog').toContain('nbit');
+    const verdict = isInstitutionalCandidate('nbitterlemonblog.blogspot.com', { nameTokens: tokens });
+    expect(verdict.ok).toBe(false);
+    expect(verdict.reason).toMatch(/academic registry/);
+  });
+
+  it('rejects an unrelated institution on an academic registry', () => {
+    const tokens = institutionTokens({
+      officialName: 'Northbridge Institute of Technology', shortName: 'NBIT',
+      allowedDomains: ['nbitadmissions.org'],
+    } as never);
+    expect(isInstitutionalCandidate('sfs.southbridge.edu', { nameTokens: tokens }).ok).toBe(false);
+  });
+
+  it('buckets everything unproven as an observed external link', async () => {
+    const r = await discovery();
+    expect(r.domainCandidates.map((d) => d.host)).toEqual(['sfs.northbridge.edu']);
+    const external = r.externalLinks.map((d) => d.host);
+    expect(external).toContain('nbitterlemonblog.blogspot.com');
+    expect(external).toContain('studentaid.example.gov');
+    // Neither bucket is trusted, and nothing in either was fetched.
+    for (const host of [...r.domainCandidates, ...r.externalLinks].map((d) => d.host)) {
+      expect(ENTRY.allowedDomains).not.toContain(host);
+      expect(requestLog.some((u) => u.includes(host))).toBe(false);
+    }
   });
 });
 
@@ -630,7 +888,8 @@ describe('Cross-domain candidates are proposed, never trusted', () => {
       '<a href="https://studentaid.example.gov/fafsa">federal aid</a><a href="https://sfs.northbridge.edu/x">SFS</a>',
       { allowedDomains: ['nbitadmissions.org'], nameTokens: ['northbridge', 'nbitadmissions'] },
     );
-    expect(found.map((f) => f.host)).toEqual(['sfs.northbridge.edu']);
+    expect(found.candidates.map((f) => f.host)).toEqual(['sfs.northbridge.edu']);
+    expect(found.external.map((f) => f.host)).toEqual(['studentaid.example.gov']);
   });
 });
 

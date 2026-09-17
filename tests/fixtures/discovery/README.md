@@ -21,6 +21,17 @@ produced once that bug was fixed:
 | `blog-majors.html` | a blog post standing in for an academics page |
 | `dining-menus.html` | site navigation making an unrelated page look like an admissions page |
 
+A second live run fixed those and surfaced four smaller ranking faults, also
+reproduced here:
+
+| fixture | reproduces |
+| --- | --- |
+| `apply-first-year-checklist.html` | a thin but dated page outranking a rich undated one, because currency sorted above the score |
+| `afford-calculator.html` | a net-price calculator ("Estimate your cost") chosen as the cost-of-attendance source |
+| `discover-majors-minors.html` | a real majors page losing to an `/apply/` page, because `/apply/` was canonical site-wide |
+| `/apply/tuition-and-fees/` listed twice in `sitemap-apply.xml`, with and without a trailing slash | a page reported as its own runner-up |
+| a `blogspot.com` link in `apply-financial-aid.html` whose name contains the acronym `nbit` | `dimitristheblogger.blogspot.com` presented as a possible MIT domain |
+
 Every page carries the same global navigation, which advertises "how to apply",
 "first year applicants", "admissions office", "tuition and fees" and "financial
 aid" — the template contamination that gave nearly every real MIT page an

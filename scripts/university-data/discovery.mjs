@@ -240,6 +240,17 @@ export const KIND_SIGNALS = {
   cost_of_attendance: {
     decisionCritical: true,
     audienceSensitive: false,
+    // "Cost" on its own is not a cost of attendance. A live run selected a
+    // net-price calculator page titled "Estimate your cost". The page must
+    // either use a cost-of-attendance phrase, or state the components one is
+    // built from.
+    requireOneOf: [
+      ['cost of attendance'], ['estimated cost of attendance'], ['cost of attending'],
+      ['annual cost'], ['total cost'], ['total estimated cost'],
+      ['student budget'], ['undergraduate budget'], ['estimated expenses'],
+      ['tuition', 'housing'], ['tuition', 'room and board'], ['tuition', 'board'],
+      ['tuition', 'food'], ['tuition', 'accommodation'],
+    ],
     require: [['cost', 'costs', 'budget', 'expenses']],
     canonical: ['cost', 'costs', 'cost of attendance', 'afford', 'tuition', 'financial aid', 'finaid'],
     path: ['cost of attendance', 'cost', 'budget', 'student budget', 'expenses'],
@@ -385,20 +396,15 @@ const GLOBAL_NEGATIVE = [
 /* ------------------------------------------------------------------ */
 
 /**
- * Path segments that mark a standing institutional page.
+ * Path segments that mark a dated article rather than a standing page.
  *
- * Generic on purpose. Nothing here names an institution, and nothing here came
- * from looking at one university's URL scheme.
+ * There is deliberately no *global* list of canonical segments. A live run
+ * selected an application-essays page as the canonical source for `programs`,
+ * because `/apply/` was on a site-wide canonical list and outranked a real
+ * majors-and-minors page. Canonicality is a property of a path *for a
+ * particular kind*, so each kind declares its own `canonical` segments and
+ * nothing else grants canonical standing.
  */
-export const CANONICAL_SEGMENTS = [
-  'apply', 'admissions', 'admission', 'afford', 'financial aid', 'finaid', 'aid', 'cost', 'costs',
-  'tuition', 'fees', 'requirements', 'testing', 'tests', 'academics', 'majors', 'programs',
-  'programmes', 'degrees', 'deadlines', 'dates', 'scholarships', 'scholarship', 'english',
-  'undergraduate', 'admitted', 'prospective', 'bursar', 'registrar', 'student financial services',
-  'institutional research', 'common data set',
-];
-
-/** Path segments that mark a dated article rather than a standing page. */
 export const NON_CANONICAL_SEGMENTS = [
   'blogs', 'blog', 'news', 'stories', 'story', 'entry', 'entries', 'archive', 'archives',
   'posts', 'post', 'press', 'newsroom', 'announcements', 'announcement', 'events', 'event',
@@ -413,6 +419,20 @@ const BLOG_CONTENT_MARKERS = [
   'this entry was posted', 'continue reading',
 ];
 
+/**
+ * Markers of an interactive estimator rather than a published figure.
+ *
+ * A net-price calculator is a real institutional page and a real service; it is
+ * not a source for what something costs, unless it also prints the components.
+ */
+const CALCULATOR_MARKERS = [
+  'calculator', 'calculators', 'net price calculator', 'estimator', 'cost estimator',
+  'estimate your cost', 'calculate your', 'estimate your aid',
+];
+
+/** A currency-formatted figure, which is what separates a source from a tool. */
+const STATES_FIGURES = /[$£€¥₩]\s?\d[\d,]{2,}/;
+
 /** Language that marks a page as announcing a change rather than stating policy. */
 const ANNOUNCEMENT_MARKERS = [
   'we are reinstating', 'we are suspending', 'we are extending', 'we are pausing',
@@ -424,7 +444,6 @@ const ANNOUNCEMENT_MARKERS = [
 const AUTHORITY = {
   canonicalSegment: 2,
   canonicalCap: 4,
-  kindCanonical: 2,
   // Moderate on purpose. Ranking is role-first, so a canonical page already
   // beats a blog whatever the scores say; these penalties only need to sink a
   // thin article below the acceptance bar while letting a genuinely detailed
@@ -449,7 +468,18 @@ const AUDIENCE_RANK = {
   first_year: 5, all_undergraduate: 4, international: 4, unknown: 3, transfer: 1, graduate: 0,
 };
 const ROLE_RANK = { canonical: 3, supporting: 2, fallback: 1, historical: 0 };
-const TEMPORAL_RANK = { current: 3, unknown: 2, dated: 1, historical: 0 };
+
+/**
+ * How much a page's currency is worth, as a bounded score adjustment.
+ *
+ * It used to be a lexicographic tier above the score, which made it far too
+ * powerful: a live run picked an essays page (final 16) over a
+ * deadlines-and-requirements page (final 21.5) purely because the first
+ * carried a date and the second did not. An undated standing page is not
+ * evidence of staleness — `unknown` means unknown, so it is worth zero, not a
+ * demotion.
+ */
+const TEMPORAL_ADJUSTMENT = { current: 2, unknown: 0, dated: -2, historical: -4 };
 
 const WEIGHTS = { title: 3, heading: 2, text: 1, path: 1, sitemap: 0.5, negative: -4 };
 /** Body-text hits beyond this add nothing; a long page should not outrank a precise one. */
@@ -482,10 +512,22 @@ export function pathSegments(url) {
   return pathOf(url).split('/').filter(Boolean).map((seg) => normalise(seg).trim()).filter(Boolean);
 }
 
-/** Terms that appear as a whole path segment. */
-const segmentHits = (segments, terms) => {
+/**
+ * Terms that appear as a whole path segment.
+ *
+ * `prefix` additionally accepts a compound segment that *starts* with the term,
+ * because URL slugs put their topic first: `majors-minors` is a majors page,
+ * `tuition-and-fees` is a tuition page. It is off by default, and deliberately
+ * off for the article-path list — `entry-requirements` must not be read as a
+ * blog `entry`.
+ */
+const segmentHits = (segments, terms, { prefix = false } = {}) => {
   const set = new Set(segments);
-  return terms.filter((t) => set.has(term(t)));
+  return terms.filter((t) => {
+    const needle = term(t);
+    if (set.has(needle)) return true;
+    return prefix && segments.some((seg) => seg.startsWith(`${needle} `));
+  });
 };
 
 /* ------------------------------------------------------------------ */
@@ -633,22 +675,15 @@ export function pathAuthority(rawUrl, kind) {
 
   const segments = pathSegments(rawUrl);
   const badHits = segmentHits(segments, NON_CANONICAL_SEGMENTS);
-  const canonicalHits = segmentHits(segments, CANONICAL_SEGMENTS);
-  const kindHits = segmentHits(segments, signals.canonical ?? []);
+  const canonicalHits = segmentHits(segments, signals.canonical ?? [], { prefix: true });
 
   // An article permalink earns no canonical credit, however many institutional
   // words its slug contains. A post filed under /news/ is a post.
-  if (badHits.length === 0) {
-    if (canonicalHits.length) {
-      const bonus = Math.min(AUTHORITY.canonicalCap, canonicalHits.length * AUTHORITY.canonicalSegment);
-      score += bonus;
-      reasons.push(`canonical path (${canonicalHits.slice(0, 3).join(', ')}) +${bonus}`);
-    }
-    if (kindHits.length) {
-      score += AUTHORITY.kindCanonical;
-      reasons.push(`path matches this kind's canonical location (${kindHits[0]}) +${AUTHORITY.kindCanonical}`);
-    }
-  } else if (canonicalHits.length) {
+  if (badHits.length === 0 && canonicalHits.length) {
+    const bonus = Math.min(AUTHORITY.canonicalCap, canonicalHits.length * AUTHORITY.canonicalSegment);
+    score += bonus;
+    reasons.push(`canonical for ${kind} (${canonicalHits.slice(0, 3).join(', ')}) +${bonus}`);
+  } else if (badHits.length && canonicalHits.length) {
     reasons.push(`canonical words (${canonicalHits.slice(0, 2).join(', ')}) ignored: this is an article path`);
   }
 
@@ -702,12 +737,25 @@ export function scoreAuthority(kind, doc = {}, now = new Date()) {
   }
 
   const temporal = doc.temporal ?? detectTemporal({ html, url, text, blogLike }, now);
+  const temporalAdj = TEMPORAL_ADJUSTMENT[temporal.temporalStatus] ?? 0;
+  if (temporalAdj !== 0) {
+    score += temporalAdj;
+    reasons.push(`${temporal.temporalStatus} ${temporalAdj > 0 ? '+' : ''}${temporalAdj}`);
+  }
 
-  const role =
+  let role =
     blogLike && temporal.temporalStatus === 'historical' ? 'historical'
     : blogLike ? 'fallback'
     : p.canonicalHits.length > 0 ? 'canonical'
     : 'supporting';
+
+  // A calculator that prints no figures is a tool, not a source. It can support
+  // a value a human is checking; it cannot be the canonical statement of one.
+  const calculator = hits(normalise(`${title} ${pathOf(url)}`), CALCULATOR_MARKERS);
+  if (calculator.length && !STATES_FIGURES.test(text) && role === 'canonical') {
+    role = 'supporting';
+    reasons.push(`"${calculator[0]}" page stating no figures — supporting at most`);
+  }
 
   return { score: Number(score.toFixed(2)), reasons, role, blogLike, audience, temporal };
 }
@@ -797,6 +845,19 @@ export function scoreKind(kind, doc = {}, now = new Date()) {
     }
   }
 
+  // At least one clause must be satisfied in full. A clause of several terms is
+  // a conjunction: "tuition" AND "housing" is evidence of a cost breakdown in a
+  // way that either word alone is not.
+  if (signals.requireOneOf) {
+    const ok = signals.requireOneOf.some((clause) => clause.every((t) => hasTerm(corpus, t)));
+    if (!ok) {
+      return fail(
+        `no specific ${kind.replace(/_/g, ' ')} statement — needs one of `
+        + `${signals.requireOneOf.slice(0, 4).map((cl) => cl.join(' + ')).join(', ')}`,
+      );
+    }
+  }
+
   let coOccurrence = null;
   if (signals.coRequire) {
     coOccurrence = coOccurs(signals.coRequire[0], signals.coRequire[1], { title, sections, text });
@@ -875,15 +936,19 @@ export function classifyDocument(doc, now = new Date()) {
 /**
  * Orders two accepted candidates for the same kind.
  *
- * Role first, deliberately: a canonical page wins over a blog post even with a
- * lower keyword score, which is the whole point of separating authority from
- * relevance. Then audience, then how current the page is, then score.
+ * Exactly one thing is lexicographic: the role. A canonical page wins over a
+ * blog post even with a lower keyword score, which is the whole point of
+ * separating authority from relevance.
+ *
+ * Everything else — audience, currency — is already folded into the authority
+ * score as a bounded adjustment, so it can tip a close call but can never
+ * override a substantially better page. Audience keeps a tiebreak below the
+ * score, for the case where two pages are otherwise identical.
  */
 export function compareCandidates(a, b) {
   return (ROLE_RANK[b.role] ?? 0) - (ROLE_RANK[a.role] ?? 0)
-    || (AUDIENCE_RANK[b.audience] ?? 3) - (AUDIENCE_RANK[a.audience] ?? 3)
-    || (TEMPORAL_RANK[b.temporal?.temporalStatus] ?? 2) - (TEMPORAL_RANK[a.temporal?.temporalStatus] ?? 2)
-    || b.score - a.score;
+    || b.score - a.score
+    || (AUDIENCE_RANK[b.audience] ?? 3) - (AUDIENCE_RANK[a.audience] ?? 3);
 }
 
 /** Why the winner beat the runner-up, in one line. */
@@ -892,13 +957,16 @@ export function whyItWon(winner, loser) {
   if ((ROLE_RANK[winner.role] ?? 0) !== (ROLE_RANK[loser.role] ?? 0)) {
     return `${winner.role} source outranks ${loser.role}`;
   }
-  if ((AUDIENCE_RANK[winner.audience] ?? 3) !== (AUDIENCE_RANK[loser.audience] ?? 3)) {
-    return `audience ${winner.audience} is preferred over ${loser.audience}`;
+  if (winner.score !== loser.score) {
+    const wt = winner.temporal?.temporalStatus ?? 'unknown';
+    const lt = loser.temporal?.temporalStatus ?? 'unknown';
+    const note = wt !== lt ? ` (${wt} vs ${lt}, worth ${TEMPORAL_ADJUSTMENT[wt] ?? 0} vs ${TEMPORAL_ADJUSTMENT[lt] ?? 0})` : '';
+    return `higher final score (${winner.score} vs ${loser.score})${note}`;
   }
-  const wt = winner.temporal?.temporalStatus ?? 'unknown';
-  const lt = loser.temporal?.temporalStatus ?? 'unknown';
-  if (wt !== lt) return `${wt} policy preferred over ${lt}`;
-  return `higher final score (${winner.score} vs ${loser.score})`;
+  if ((AUDIENCE_RANK[winner.audience] ?? 3) !== (AUDIENCE_RANK[loser.audience] ?? 3)) {
+    return `scores tied; audience ${winner.audience} is preferred over ${loser.audience}`;
+  }
+  return `scores tied (${winner.score}); first by discovery order`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1006,6 +1074,27 @@ export const DISCOVERY_LIMITS = {
 /* Discovery                                                           */
 /* ------------------------------------------------------------------ */
 
+/**
+ * A URL reduced to what makes it a distinct page.
+ *
+ * Two candidates can be different URLs and the same page: `/afford/x` and
+ * `/afford/x/` redirect to one place, and a live run duly reported that page as
+ * its own runner-up, having lost to itself 8 to 8. Dedupe happens on the URL a
+ * fetch actually landed on, after redirects.
+ */
+export function normalizeUrl(raw) {
+  try {
+    const u = new URL(raw);
+    u.hash = '';
+    u.hostname = u.hostname.toLowerCase();
+    u.protocol = u.protocol.toLowerCase();
+    const path = u.pathname.replace(/\/+$/, '');
+    return `${u.protocol}//${u.hostname}${path || '/'}${u.search}`;
+  } catch {
+    return String(raw ?? '');
+  }
+}
+
 /** Candidate tiers. A URL the site publishes always beats a path we guessed. */
 const TIER = { discovered: 0, guess: 1 };
 
@@ -1034,37 +1123,89 @@ export function candidatePriority(url, kind) {
 }
 
 /**
- * Hosts an already-trusted page links to that may be the same institution.
+ * Public suffixes reserved for accredited institutions.
  *
- * Never auto-trusted. This only produces a list for a human to look at, because
- * "a trusted page linked to it" is not the same as "the institution owns it" —
- * official pages link to payment processors, testing agencies and social media
- * too. The heuristic is deliberately narrow: the host must share a name token
- * with the institution or with a domain already approved for it.
+ * This is the only mechanically checkable ownership signal available here.
+ * Nobody can register `blogspot.edu` or `wordpress.ac.uk` — these registries
+ * verify the registrant. A `.com` or `.org` host cannot be established as an
+ * institutional property by anything this pipeline can see, so it never becomes
+ * a domain candidate however suggestive its name is.
+ */
+const ACADEMIC_SUFFIXES = ['edu'];
+const ACADEMIC_SECOND_LEVELS = ['ac', 'edu'];
+
+/** True when a hostname sits on a restricted academic registry. */
+export function isAcademicHost(host) {
+  const parts = String(host).toLowerCase().split('.').filter(Boolean);
+  if (parts.length < 2) return false;
+  if (ACADEMIC_SUFFIXES.includes(parts[parts.length - 1])) return true;
+  // ac.uk, edu.sg, ac.kr, edu.au, ac.jp, edu.pl ...
+  return parts.length >= 3 && ACADEMIC_SECOND_LEVELS.includes(parts[parts.length - 2]);
+}
+
+/** The registrable domain of a host, handling two-part academic suffixes. */
+export function registrableDomain(host) {
+  const parts = String(host).toLowerCase().split('.').filter(Boolean);
+  if (parts.length <= 2) return parts.join('.');
+  const twoPart = new Set(['ac', 'edu', 'gov', 'co', 'or', 'ne', 'com']);
+  return twoPart.has(parts[parts.length - 2]) ? parts.slice(-3).join('.') : parts.slice(-2).join('.');
+}
+
+/**
+ * Whether a linked host can be shown as a possible property of this institution.
+ *
+ * Deliberately conservative, because of a real result: a trusted MIT page links
+ * to `dimitristheblogger.blogspot.com`, and a substring test found "mit" inside
+ * "dimitris". Two conditions must now both hold — the host is on a restricted
+ * academic registry, and its registrable label relates to this institution by
+ * whole-token match rather than by containing three letters of one.
+ *
+ * Anything else is recorded as an observed external link, never as a candidate.
+ */
+export function isInstitutionalCandidate(host, { nameTokens }) {
+  if (!isAcademicHost(host)) return { ok: false, reason: 'not on an academic registry (.edu / ac.* / edu.*)' };
+  const label = registrableDomain(host).split('.')[0];
+  if (!label) return { ok: false, reason: 'no registrable label' };
+  // Exact, or this label is the stem of one of ours: `mit` is the stem of
+  // `mitadmissions`. Not the other way round — that would accept
+  // `mitsubishi.edu` for an institution whose acronym is "mit".
+  const match = nameTokens.find((t) => t.length >= 3 && (t === label || t.startsWith(label)));
+  return match
+    ? { ok: true, reason: `academic registry and "${label}" matches "${match}"` }
+    : { ok: false, reason: `"${label}" does not match this institution's name` };
+}
+
+/**
+ * Hosts an already-trusted page links to, split into candidates and noise.
+ *
+ * Never auto-trusted, and nothing here is fetched. `candidates` is what a human
+ * is asked to look at; `external` is everything else, for --debug only, because
+ * official pages link to payment processors, testing agencies, social media and
+ * students' personal blogs.
  */
 export function collectDomainCandidates(html, { allowedDomains, nameTokens }) {
-  const out = new Map();
+  const candidates = new Map();
+  const external = new Map();
+
   for (const m of String(html).matchAll(/<a\b[^>]*href=["'](https:\/\/[^"'#?]+)["'][^>]*>([\s\S]{0,120}?)<\/a>/gi)) {
     let host;
     try { host = new URL(m[1]).hostname.toLowerCase(); } catch { continue; }
     if (allowedDomains.some((d) => hostMatchesDomain(host, d))) continue;
 
-    const labels = host.split('.');
-    const related = nameTokens.some((t) => t.length >= 3 && labels.some((l) => l.includes(t)));
-    if (!related) continue;
-
-    const prev = out.get(host) ?? { host, occurrences: 0, examples: [], anchors: [] };
+    const verdict = isInstitutionalCandidate(host, { nameTokens });
+    const bucket = verdict.ok ? candidates : external;
+    const prev = bucket.get(host) ?? { host, occurrences: 0, examples: [], anchors: [], reason: verdict.reason };
     prev.occurrences++;
     if (prev.examples.length < 3) prev.examples.push(m[1]);
     const anchor = m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     if (anchor && prev.anchors.length < 3) prev.anchors.push(anchor.slice(0, 80));
-    out.set(host, prev);
+    bucket.set(host, prev);
   }
-  return [...out.values()];
+  return { candidates: [...candidates.values()], external: [...external.values()] };
 }
 
-/** Name tokens for the domain-candidate heuristic, from the registry entry only. */
-function institutionTokens(entry) {
+/** Name tokens for the domain-candidate rule, from the registry entry only. */
+export function institutionTokens(entry) {
   const words = normalise(`${entry.officialName ?? ''} ${entry.shortName ?? ''}`).trim().split(' ');
   const stop = new Set(['the', 'of', 'and', 'for', 'university', 'institute', 'college', 'school', 'technology', 'national', 'state']);
   const tokens = words.filter((w) => w.length >= 3 && !stop.has(w));
@@ -1072,7 +1213,7 @@ function institutionTokens(entry) {
   for (const d of entry.allowedDomains ?? []) tokens.push(d.split('.')[0]);
   const acronym = (entry.shortName ?? '').toLowerCase().replace(/[^a-z]/g, '');
   if (acronym.length >= 2) tokens.push(acronym);
-  return [...new Set(tokens)];
+  return [...new Set(tokens.filter(Boolean))];
 }
 
 /**
@@ -1099,9 +1240,12 @@ export async function discoverPages(entry, {
   const debugRows = [];
   const manualReview = [];
   const domainCandidates = new Map();
+  /** Linked hosts that could not be established as institutional. Debug only. */
+  const externalLinks = new Map();
   const diagnostics = {
     robotsSitemaps: [], sitemapsFetched: 0, sitemapUrlsDiscovered: 0,
     nonContentUrlsSkipped: 0, candidatesConsidered: 0, candidatesSkippedForBudget: 0,
+    duplicatePagesSkipped: 0,
     pagesFetched: 0, pagesClassified: 0, chromeStrippedPages: 0, requests: 0,
     budgetExhausted: false,
   };
@@ -1230,11 +1374,18 @@ export async function discoverPages(entry, {
   // before any guess, and within each tier canonical-looking URLs go first.
   const ordered = [...candidates.values()].sort((a, b) => a.tier - b.tier || b.priority - a.priority);
   const retrievedAt = new Date().toISOString();
+  /** Pages already retrieved, keyed by the URL the fetch landed on. */
+  const seenPages = new Set();
 
   for (const cand of ordered) {
     if (diagnostics.pagesFetched >= limits.maxContentFetches || !budgetLeft()) {
       diagnostics.budgetExhausted = true;
       diagnostics.candidatesSkippedForBudget++;
+      continue;
+    }
+    if (seenPages.has(normalizeUrl(cand.url))) {
+      diagnostics.duplicatePagesSkipped++;
+      note({ url: cand.url, stage: 'candidate', decision: 'skipped', reason: 'same page as a candidate already fetched' });
       continue;
     }
 
@@ -1255,6 +1406,15 @@ export async function discoverPages(entry, {
       note({ url: res.url, stage: 'fetch', status: res.status, decision: 'rejected', reason: 'bot challenge page, not real content' });
       continue;
     }
+    // Redirects collapse distinct candidates onto one page.
+    const finalKey = normalizeUrl(res.url);
+    if (seenPages.has(finalKey)) {
+      diagnostics.duplicatePagesSkipped++;
+      note({ url: res.url, stage: 'fetch', status: res.status, decision: 'skipped', reason: 'redirected to a page already classified' });
+      continue;
+    }
+    seenPages.add(finalKey);
+    seenPages.add(normalizeUrl(cand.url));
 
     const isPdf = res.contentType === 'application/pdf';
     const isHtml = res.contentType === 'text/html' || res.contentType === 'application/xhtml+xml'
@@ -1297,10 +1457,13 @@ export async function discoverPages(entry, {
       };
       scored = classifyDocument(doc, now);
 
-      for (const dc of collectDomainCandidates(rawHtml, { allowedDomains: domains, nameTokens })) {
-        const prev = domainCandidates.get(dc.host);
-        if (prev) { prev.occurrences += dc.occurrences; continue; }
-        domainCandidates.set(dc.host, { ...dc, linkedFrom: res.url });
+      const links = collectDomainCandidates(rawHtml, { allowedDomains: domains, nameTokens });
+      for (const [bucket, target] of [[links.candidates, domainCandidates], [links.external, externalLinks]]) {
+        for (const dc of bucket) {
+          const prev = target.get(dc.host);
+          if (prev) { prev.occurrences += dc.occurrences; continue; }
+          target.set(dc.host, { ...dc, linkedFrom: res.url });
+        }
       }
     }
     diagnostics.pagesClassified++;
@@ -1339,7 +1502,15 @@ export async function discoverPages(entry, {
   const fallbacks = {};
 
   for (const kind of kinds) {
-    const list = [...perKind[kind]].sort(compareCandidates);
+    // Dedupe by landed URL before ranking, so a page can never be its own
+    // runner-up even if two candidates somehow reached it.
+    const byUrl = new Map();
+    for (const c of perKind[kind]) {
+      const key = normalizeUrl(c.url);
+      const prev = byUrl.get(key);
+      if (!prev || c.score > prev.score) byUrl.set(key, c);
+    }
+    const list = [...byUrl.values()].sort(compareCandidates);
     if (list.length === 0) continue;
     const [winner, runnerUp] = list;
 
@@ -1386,6 +1557,7 @@ export async function discoverPages(entry, {
   return {
     found, notFound, manualReview, rejectedForQuality, fallbacks,
     domainCandidates: [...domainCandidates.values()].sort((a, b) => b.occurrences - a.occurrences).slice(0, 10),
+    externalLinks: [...externalLinks.values()].sort((a, b) => b.occurrences - a.occurrences).slice(0, 25),
     diagnostics, debug: debugRows, status,
   };
 }

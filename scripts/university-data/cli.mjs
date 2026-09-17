@@ -125,6 +125,7 @@ async function cmdDiscover() {
   console.log(`  HTTP requests total:          ${d.requests}${d.budgetExhausted ? c.y('  (budget exhausted)') : ''}`);
 
   console.log(`  pages whose chrome was stripped: ${d.chromeStrippedPages}`);
+  console.log(`  duplicate pages skipped:      ${d.duplicatePagesSkipped}`);
   console.log(`  candidates left unfetched:     ${d.candidatesSkippedForBudget}`);
 
   console.log(c.b('\nFOUND'));
@@ -176,8 +177,18 @@ async function cmdDiscover() {
     console.log(c.dim('  A link is not proof of ownership. Check each one yourself before approving it.'));
     for (const dc of result.domainCandidates) {
       console.log(`  ${dc.host}  ${c.dim(`(${dc.occurrences} link${dc.occurrences === 1 ? '' : 's'}, e.g. "${dc.anchors[0] ?? dc.examples[0]}")`)}`);
-      console.log(c.dim(`      seen on ${dc.linkedFrom}`));
-      console.log(c.dim(`      to approve: npm run data:add-domain -- --university=${entry.id} --domain=${dc.host} --yes`));
+      console.log(c.dim(`      why:     ${dc.reason}`));
+      console.log(c.dim(`      seen on  ${dc.linkedFrom}`));
+      console.log(c.dim(`      approve: npm run data:add-domain -- --university=${entry.id} --domain=${dc.host} --yes`));
+    }
+  }
+
+  if (debug && result.externalLinks.length) {
+    console.log(c.b('\nEXTERNAL LINKS OBSERVED — not candidates'));
+    console.log(c.dim('  Linked from a trusted page, but ownership cannot be established mechanically.'));
+    console.log(c.dim('  Listed for information only. None of these was fetched.'));
+    for (const ex of result.externalLinks) {
+      console.log(c.dim(`  ${ex.host}  (${ex.occurrences}) — ${ex.reason}`));
     }
   }
 

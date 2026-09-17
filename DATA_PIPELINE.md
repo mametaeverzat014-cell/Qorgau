@@ -191,6 +191,10 @@ Then **NOT FOUND**, distinguishing "nothing matched" from "a candidate was found
 and refused", with the refused URL and the reason. Then any PDFs needing manual
 reading, any cross-domain candidates, and a coverage note.
 
+`--debug` additionally prints **external links observed** — hosts a trusted page
+linked to whose ownership could not be established. They are information, not
+candidates.
+
 `--debug` adds every candidate with its fetch priority, HTTP status, content
 type, per-kind relevance/authority scores, role, audience, temporal status and
 the accept/reject reason.
@@ -262,21 +266,40 @@ than single words.
 
 | signal | effect |
 | --- | --- |
-| canonical path segment (`/apply/`, `/tuition/`, `/financial-aid/`, `/deadlines/`, …) | +2 each, capped +4 |
-| path segment matching this kind's usual location | +2 |
+| path segment canonical **for this kind** | +2 each, capped +4 |
 | article path segment (`/blogs/`, `/news/`, `/entry/`, `/archive/`, …) | −4, −1 per extra, capped −6 |
 | article markers in the body ("posted on", "filed under", "leave a comment") | −2 |
 | dated permalink (`/2019/04/…`) | −2 |
 | audience, on kinds where it matters | first-year +2, undergraduate +1, transfer −4, graduate −7 |
+| temporal status | current +2, unknown 0, dated −2, historical −4 |
 
-Authority is judged on **whole path segments**, never substrings. This matters:
+**Canonicality is per kind.** There is deliberately no site-wide list of
+canonical segments: a live run picked an application-essays page as the
+canonical source for `programs`, because `/apply/` was on a global list and
+outranked a real majors-and-minors page. `/apply/` is canonical for admissions
+and for deadlines; it confers nothing on programs.
+
+Authority is judged on **whole path segments**, never substrings.
 `/news/admissions-office-moves-building` contains the word "admissions", but its
 segments are `news` and `admissions office moves building` — so it earns no
 canonical credit. An article path earns none at all, however many institutional
-words its slug contains.
+words its slug contains. A compound slug is matched from the front, because
+slugs put their topic first: `majors-minors` is a majors page,
+`essays-activities-academics` is not an academics page. The article list is
+matched exactly, so `entry-requirements` is not read as a blog `entry`.
 
-`finalScore = relevance + authority`, and **ranking is role-first**: a canonical
-page beats a blog post whatever the keyword scores say.
+`finalScore = relevance + authority`, and **exactly one thing is
+lexicographic — the role**. A canonical page beats a blog post whatever the
+keyword scores say. Everything else, currency included, is a bounded score
+adjustment that can tip a close call but never override a substantially better
+page.
+
+Some kinds demand more than keywords. `cost_of_attendance` requires one of a set
+of clauses — "cost of attendance", "student budget", "annual cost", or tuition
+together with housing, room and board, or food. The word "cost" alone is never
+enough, and a net-price calculator that prints no figures is capped at
+`supporting`: it is a real institutional service and not a source for what
+something costs.
 
 ### Site chrome is stripped before classification
 
@@ -324,7 +347,10 @@ in…", "effective from") or is more than two years old.
 
 `unknown` is the default and is not a failure. Claiming a page is current when
 nothing on it says so would be inventing the one property that matters most for
-a policy that changes every cycle.
+a policy that changes every cycle. **`unknown` is also not a demotion** — it is
+worth exactly zero. A live run selected a thin essays page (final 16, dated)
+over a deadlines-and-requirements page (final 21.5, undated) because currency
+sorted above the score; it is now a ±2 adjustment inside the score.
 
 **A `historical` source is never selected for a decision-critical field**, at any
 score. That is precisely what made an announcement that the SAT requirement was
@@ -360,14 +386,31 @@ canonical used to outrank a real URL, which is how a live run spent all 45 page
 fetches on 404s and never reached the pages in its own sitemap. The budget itself
 is unchanged.
 
+Candidates are also deduplicated by the URL a fetch actually lands on, after
+redirects. `/afford/x` and `/afford/x/` are one page; a live run reported that
+page as its own runner-up, having lost to itself 8 to 8.
+
 ### Cross-domain
 
-Discovery never widens an allow-list. When an already-trusted page links to a
-host that shares a name token with the institution, that host is recorded as a
-**domain candidate** with the link that produced it, the anchor text, and the
-`add-domain` command that would approve it. Nothing is fetched from it. A link is
-not proof of ownership — official pages link to payment processors and testing
-agencies too.
+Discovery never widens an allow-list. A linked host becomes a **domain
+candidate** only when two conditions both hold:
+
+1. it sits on a **restricted academic registry** — `.edu`, or a two-part `ac.*`
+   / `edu.*` suffix — which are the only public suffixes here whose registrants
+   are verified; and
+2. its registrable label relates to the institution by **whole-token match** —
+   equal to one of its name tokens, or the stem of one (`mit` is the stem of
+   `mitadmissions`).
+
+Anything else goes to **external links observed**, a `--debug`-only bucket, and
+is never presented as a candidate. This is deliberately conservative because of
+a real result: a trusted page linked to `dimitristheblogger.blogspot.com`, and a
+substring test found "mit" inside "dimitris".
+
+Candidates carry the link that produced them, the anchor text, the reason they
+qualified, and the `add-domain` command that would approve one. Nothing in
+either bucket is fetched, and a link is never proof of ownership — official
+pages link to payment processors and testing agencies too.
 
 Discovery also prints a coverage note naming the current allow-list and the kinds
 with no approved source, because "not found" and "not reachable from this one
@@ -475,7 +518,7 @@ Consequently:
   does not propose a replacement from memory and does not edit the dataset. A
   variant that responds is a lead, not a confirmation.
 
-What is proven: 126 tests exercise discovery, extraction, validation, the security
+What is proven: 148 tests exercise discovery, extraction, validation, the security
 gate and the approval gate, including an end-to-end fixture run from HTML through to a
 verdict. Twelve red-team scenarios — monthly housing, mixed academic years,
 domestic-only scholarships, stale SAT policy text, old PDFs, aggregator domains,
@@ -501,9 +544,10 @@ access. Nothing else is required.
    as evidence. The source-selection rules that replace those false positives
    are exercised only against fixtures — a sitemap index, four child sitemaps,
    canonical pages, five blog posts reproducing each real false positive, a
-   chrome-heavy page, two PDFs and a hostile hostname. Fixtures are not the
-   internet. From this environment every request to a university domain returns
-   HTTP 403 at the egress proxy, so the next live run is the real test.
+   calculator page, a chrome-heavy page, two PDFs, a hostile hostname and a
+   blog host whose name contains the institution's acronym. Fixtures are not
+   the internet. From this environment every request to a university domain
+   returns HTTP 403 at the egress proxy, so the next live run is the real test.
 4. **Each institution starts with one allowed domain.** Real institutions spread
    admissions, the registrar, student financial services and institutional
    research across several. Until a person approves the others with

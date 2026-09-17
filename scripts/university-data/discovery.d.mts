@@ -36,6 +36,7 @@ export interface KindSignals {
   decisionCritical?: boolean;
   audienceSensitive?: boolean;
   require?: string[][];
+  requireOneOf?: string[][];
   coRequire?: [string[], string[]];
   hardNegative?: string[];
   canonical?: string[];
@@ -51,7 +52,6 @@ export const CANDIDATE_PATHS: Record<string, string[]>;
 export const ACCEPT_THRESHOLD: number;
 export const MIN_CONTENT_SIGNAL: number;
 export const FALLBACK_MIN: number;
-export const CANONICAL_SEGMENTS: string[];
 export const NON_CANONICAL_SEGMENTS: string[];
 export const DISCOVERY_LIMITS: {
   maxSitemapFetches: number;
@@ -84,10 +84,26 @@ export function scoreAuthority(kind: string, doc?: DocumentInput, now?: Date): {
 export function candidatePriority(url: string, kind: string): {
   score: number; relevance: number; authority: number; audience: Audience; blogPath: boolean;
 };
+export interface LinkedHost {
+  host: string;
+  occurrences: number;
+  examples: string[];
+  anchors: string[];
+  reason: string;
+  linkedFrom?: string;
+}
 export function collectDomainCandidates(
   html: string,
   ctx: { allowedDomains: string[]; nameTokens: string[] },
-): Array<{ host: string; occurrences: number; examples: string[]; anchors: string[] }>;
+): { candidates: LinkedHost[]; external: LinkedHost[] };
+export function isAcademicHost(host: string): boolean;
+export function registrableDomain(host: string): string;
+export function isInstitutionalCandidate(
+  host: string,
+  ctx: { nameTokens: string[] },
+): { ok: boolean; reason: string };
+export function institutionTokens(entry: Partial<RegistryEntry>): string[];
+export function normalizeUrl(raw: string): string;
 export function compareCandidates(a: KindScore, b: KindScore): number;
 export function whyItWon(winner: KindScore, loser?: KindScore | null): string;
 
@@ -152,6 +168,7 @@ export interface DiscoveryDiagnostics {
   nonContentUrlsSkipped: number;
   candidatesConsidered: number;
   candidatesSkippedForBudget: number;
+  duplicatePagesSkipped: number;
   pagesFetched: number;
   pagesClassified: number;
   chromeStrippedPages: number;
@@ -177,7 +194,8 @@ export interface DiscoveryResult {
   notFound: string[];
   rejectedForQuality: Array<{ kind: string; url: string; role: SourceRole; score: number; reason: string }>;
   fallbacks: Record<string, DiscoveredPage>;
-  domainCandidates: Array<{ host: string; occurrences: number; examples: string[]; anchors: string[]; linkedFrom?: string }>;
+  domainCandidates: LinkedHost[];
+  externalLinks: LinkedHost[];
   manualReview: Array<{ url: string; title: string | null; retrievedAt: string; contentType?: string; reason: string }>;
   diagnostics: DiscoveryDiagnostics;
   debug: DebugRow[];
