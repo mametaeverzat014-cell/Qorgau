@@ -221,6 +221,8 @@ export type CampusEnvironment = 'urban' | 'suburban' | 'campus-town';
 export type UniversitySize = 'small' | 'medium' | 'large';
 export type Climate = 'cold' | 'temperate' | 'warm' | 'humid-subtropical';
 
+import type { UniversityEvidence } from './provenance';
+
 export interface UniversitySources {
   admissions: string;
   tuition: string;
@@ -282,6 +284,14 @@ export interface University {
   sources: UniversitySources;
   /** Where each class of fact on this record came from, and when. */
   provenance: UniversityProvenance;
+  /**
+   * Field-level source evidence, produced by the ingestion pipeline.
+   *
+   * Optional by design. Absent means the record is hand-curated, which is what
+   * `provenance` already communicates, so existing records need no migration and
+   * the engine keeps reading the flat fields above.
+   */
+  evidence?: UniversityEvidence;
 
   highlights: string[];
 }

@@ -1,0 +1,82 @@
+# Weekly source-health check for the curated university dataset.
+#
+# This workflow deliberately cannot change any university fact. It fetches the
+# official sources recorded in the registry, reports which are broken, changed or
+# current, and uploads the report. Promoting a changed value to production still
+# requires `data:review` and an explicit `data:approve --yes` by a person.
+name: University data freshness
+
+on:
+  schedule:
+    # Mondays 06:00 UTC.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Guard the pipeline's own logic before trusting its output.
+      - name: Verify pipeline tests
+        run: npx vitest run tests/pipeline.test.ts
+
+      # Non-strict: a single unreachable university site must not fail the run.
+      # The report is the deliverable.
+      - name: Check source freshness
+        run: npm run data:check-freshness || true
+
+      - name: Check source links resolve
+        run: npm run check:links || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: freshness-report
+          path: data/freshness-report.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Summarise
+        if: always()
+        run: |
+          if [ -f data/freshness-report.json ]; then
+            node -e "
+              const r = require('./data/freshness-report.json');
+              const line = (s) => console.log(s);
+              line('## University data freshness');
+              line('');
+              line('| Status | Count |');
+              line('| --- | --- |');
+              line('| Current | ' + r.current.length + ' |');
+              line('| Review required | ' + r.review.length + ' |');
+              line('| Broken | ' + r.broken.length + ' |');
+              line('| Not yet configured | ' + r.unconfigured.length + ' |');
+              if (r.broken.length) {
+                line('');
+                line('### Broken sources');
+                for (const b of r.broken) line('- \`' + b.id + '\` ' + b.kind + ': ' + b.reason);
+              }
+              if (r.review.length) {
+                line('');
+                line('### Changed since approval — needs review');
+                for (const x of r.review) line('- \`' + x.id + '\` ' + x.kind);
+              }
+              line('');
+              line('_No university fact is changed by this workflow. Promotion requires data:review then data:approve --yes._');
+            " >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No freshness report produced (registry has no configured source URLs yet).' >> "$GITHUB_STEP_SUMMARY"
+          fi

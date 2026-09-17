@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { AppShell } from '@/components/AppShell';
 import { AIExplanation } from '@/components/recs/AIExplanation';
+import { EvidenceCoverageBadge, FactProvenance } from '@/components/FactProvenance';
+import { evidenceCoverage } from '@/lib/provenance';
 import { deadlineDisplay } from '@/components/recs/UniversityCard';
 import {
   Badge,
@@ -79,6 +81,7 @@ export default function UniversityDetailPage() {
 
   const fin = rec.fits.financial;
   const inCompare = compareIds.includes(uni.id);
+  const coverage = evidenceCoverage(uni.evidence);
 
   return (
     <AppShell>
@@ -217,6 +220,11 @@ export default function UniversityDetailPage() {
             <div className="flex items-center gap-2">
               <Wallet size={16} className="text-muted" strokeWidth={2} />
               <h2 className="text-[17px] font-semibold text-ink">Financial picture</h2>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <EvidenceCoverageBadge verified={coverage.verified} total={coverage.total} />
+              {uni.evidence?.tuition && <FactProvenance value={uni.evidence.tuition} showSource />}
             </div>
 
             <div className="mt-4">
