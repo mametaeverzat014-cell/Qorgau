@@ -1,0 +1,1057 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-17T17:05:44.566Z",
+  "note": "allowedDomains is the root of trust for ingestion. A document from any other domain cannot become evidence, even if an official page links to it.",
+  "universities": [
+    {
+      "id": "harvard",
+      "officialName": "Harvard University",
+      "shortName": "Harvard",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "harvard.edu"
+      ],
+      "officialRootUrl": "https://college.harvard.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "mit",
+      "officialName": "Massachusetts Institute of Technology",
+      "shortName": "MIT",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "mitadmissions.org"
+      ],
+      "officialRootUrl": "https://mitadmissions.org",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "princeton",
+      "officialName": "Princeton University",
+      "shortName": "Princeton",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "princeton.edu"
+      ],
+      "officialRootUrl": "https://admission.princeton.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "yale",
+      "officialName": "Yale University",
+      "shortName": "Yale",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "yale.edu"
+      ],
+      "officialRootUrl": "https://admissions.yale.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "stanford",
+      "officialName": "Stanford University",
+      "shortName": "Stanford",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "stanford.edu"
+      ],
+      "officialRootUrl": "https://admission.stanford.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "nyu",
+      "officialName": "New York University",
+      "shortName": "NYU",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "nyu.edu"
+      ],
+      "officialRootUrl": "https://www.nyu.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "uiuc",
+      "officialName": "University of Illinois Urbana-Champaign",
+      "shortName": "UIUC",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "illinois.edu"
+      ],
+      "officialRootUrl": "https://admissions.illinois.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "purdue",
+      "officialName": "Purdue University",
+      "shortName": "Purdue",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "purdue.edu"
+      ],
+      "officialRootUrl": "https://www.admissions.purdue.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "asu",
+      "officialName": "Arizona State University",
+      "shortName": "ASU",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "asu.edu"
+      ],
+      "officialRootUrl": "https://admission.asu.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "berea",
+      "officialName": "Berea College",
+      "shortName": "Berea",
+      "country": "USA",
+      "region": "North America",
+      "allowedDomains": [
+        "berea.edu"
+      ],
+      "officialRootUrl": "https://www.berea.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "snu",
+      "officialName": "Seoul National University",
+      "shortName": "SNU",
+      "country": "South Korea",
+      "region": "East Asia",
+      "allowedDomains": [
+        "snu.ac.kr"
+      ],
+      "officialRootUrl": "https://en.snu.ac.kr",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "kaist",
+      "officialName": "Korea Advanced Institute of Science and Technology",
+      "shortName": "KAIST",
+      "country": "South Korea",
+      "region": "East Asia",
+      "allowedDomains": [
+        "kaist.ac.kr"
+      ],
+      "officialRootUrl": "https://www.kaist.ac.kr",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "yonsei-uic",
+      "officialName": "Yonsei University — Underwood International College",
+      "shortName": "Yonsei UIC",
+      "country": "South Korea",
+      "region": "East Asia",
+      "allowedDomains": [
+        "yonsei.ac.kr"
+      ],
+      "officialRootUrl": "https://www.yonsei.ac.kr",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "korea-univ",
+      "officialName": "Korea University",
+      "shortName": "Korea University",
+      "country": "South Korea",
+      "region": "East Asia",
+      "allowedDomains": [
+        "korea.edu"
+      ],
+      "officialRootUrl": "https://www.korea.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "postech",
+      "officialName": "Pohang University of Science and Technology",
+      "shortName": "POSTECH",
+      "country": "South Korea",
+      "region": "East Asia",
+      "allowedDomains": [
+        "postech.ac.kr"
+      ],
+      "officialRootUrl": "https://www.postech.ac.kr",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "skku",
+      "officialName": "Sungkyunkwan University",
+      "shortName": "SKKU",
+      "country": "South Korea",
+      "region": "East Asia",
+      "allowedDomains": [
+        "skku.edu"
+      ],
+      "officialRootUrl": "https://www.skku.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "hku",
+      "officialName": "The University of Hong Kong",
+      "shortName": "HKU",
+      "country": "Hong Kong",
+      "region": "East Asia",
+      "allowedDomains": [
+        "hku.hk"
+      ],
+      "officialRootUrl": "https://www.hku.hk",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "hkust",
+      "officialName": "The Hong Kong University of Science and Technology",
+      "shortName": "HKUST",
+      "country": "Hong Kong",
+      "region": "East Asia",
+      "allowedDomains": [
+        "hkust.edu.hk"
+      ],
+      "officialRootUrl": "https://hkust.edu.hk",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "cuhk",
+      "officialName": "The Chinese University of Hong Kong",
+      "shortName": "CUHK",
+      "country": "Hong Kong",
+      "region": "East Asia",
+      "allowedDomains": [
+        "cuhk.edu.hk"
+      ],
+      "officialRootUrl": "https://www.cuhk.edu.hk",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "cityu-hk",
+      "officialName": "City University of Hong Kong",
+      "shortName": "CityU HK",
+      "country": "Hong Kong",
+      "region": "East Asia",
+      "allowedDomains": [
+        "cityu.edu.hk"
+      ],
+      "officialRootUrl": "https://www.cityu.edu.hk",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "nus",
+      "officialName": "National University of Singapore",
+      "shortName": "NUS",
+      "country": "Singapore",
+      "region": "Southeast Asia",
+      "allowedDomains": [
+        "nus.edu.sg"
+      ],
+      "officialRootUrl": "https://www.nus.edu.sg",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "ntu-sg",
+      "officialName": "Nanyang Technological University",
+      "shortName": "NTU Singapore",
+      "country": "Singapore",
+      "region": "Southeast Asia",
+      "allowedDomains": [
+        "ntu.edu.sg"
+      ],
+      "officialRootUrl": "https://www.ntu.edu.sg",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "utokyo-peak",
+      "officialName": "The University of Tokyo — PEAK",
+      "shortName": "UTokyo PEAK",
+      "country": "Japan",
+      "region": "East Asia",
+      "allowedDomains": [
+        "u-tokyo.ac.jp"
+      ],
+      "officialRootUrl": "https://www.u-tokyo.ac.jp",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "tum",
+      "officialName": "Technical University of Munich",
+      "shortName": "TUM",
+      "country": "Germany",
+      "region": "Europe",
+      "allowedDomains": [
+        "tum.de"
+      ],
+      "officialRootUrl": "https://www.tum.de",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "tu-delft",
+      "officialName": "Delft University of Technology",
+      "shortName": "TU Delft",
+      "country": "Netherlands",
+      "region": "Europe",
+      "allowedDomains": [
+        "tudelft.nl"
+      ],
+      "officialRootUrl": "https://www.tudelft.nl",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "uva",
+      "officialName": "University of Amsterdam",
+      "shortName": "UvA",
+      "country": "Netherlands",
+      "region": "Europe",
+      "allowedDomains": [
+        "uva.nl"
+      ],
+      "officialRootUrl": "https://www.uva.nl",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "bocconi",
+      "officialName": "Bocconi University",
+      "shortName": "Bocconi",
+      "country": "Italy",
+      "region": "Europe",
+      "allowedDomains": [
+        "unibocconi.it"
+      ],
+      "officialRootUrl": "https://www.unibocconi.it",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "ceu",
+      "officialName": "Central European University",
+      "shortName": "CEU",
+      "country": "Austria",
+      "region": "Europe",
+      "allowedDomains": [
+        "ceu.edu"
+      ],
+      "officialRootUrl": "https://www.ceu.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "charles",
+      "officialName": "Charles University",
+      "shortName": "Charles University",
+      "country": "Czechia",
+      "region": "Europe",
+      "allowedDomains": [
+        "cuni.cz"
+      ],
+      "officialRootUrl": "https://cuni.cz",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "uw-warsaw",
+      "officialName": "University of Warsaw",
+      "shortName": "University of Warsaw",
+      "country": "Poland",
+      "region": "Europe",
+      "allowedDomains": [
+        "uw.edu.pl"
+      ],
+      "officialRootUrl": "https://en.uw.edu.pl",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "bologna",
+      "officialName": "University of Bologna",
+      "shortName": "Bologna",
+      "country": "Italy",
+      "region": "Europe",
+      "allowedDomains": [
+        "unibo.it"
+      ],
+      "officialRootUrl": "https://www.unibo.it",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "edinburgh",
+      "officialName": "The University of Edinburgh",
+      "shortName": "Edinburgh",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "allowedDomains": [
+        "ed.ac.uk"
+      ],
+      "officialRootUrl": "https://www.ed.ac.uk",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "sciences-po",
+      "officialName": "Sciences Po",
+      "shortName": "Sciences Po",
+      "country": "France",
+      "region": "Europe",
+      "allowedDomains": [
+        "sciencespo.fr"
+      ],
+      "officialRootUrl": "https://www.sciencespo.fr",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "nyuad",
+      "officialName": "New York University Abu Dhabi",
+      "shortName": "NYU Abu Dhabi",
+      "country": "UAE",
+      "region": "Middle East",
+      "allowedDomains": [
+        "nyu.edu"
+      ],
+      "officialRootUrl": "https://nyuad.nyu.edu",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    },
+    {
+      "id": "nazarbayev",
+      "officialName": "Nazarbayev University",
+      "shortName": "Nazarbayev University",
+      "country": "Kazakhstan",
+      "region": "Central Asia",
+      "allowedDomains": [
+        "nu.edu.kz"
+      ],
+      "officialRootUrl": "https://nu.edu.kz",
+      "pages": {
+        "admissions": null,
+        "international_admissions": null,
+        "tuition": null,
+        "cost_of_attendance": null,
+        "financial_aid": null,
+        "international_financial_aid": null,
+        "scholarships": null,
+        "testing_policy": null,
+        "english_requirements": null,
+        "deadlines": null,
+        "programs": null,
+        "common_data_set": null
+      },
+      "discovery": {
+        "status": "pending",
+        "lastAttemptedAt": null,
+        "notes": "No discovery run yet. Requires outbound network access."
+      }
+    }
+  ]
+}

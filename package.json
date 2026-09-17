@@ -12,7 +12,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "npm run typecheck && npm run test && npm run build",
-    "check:links": "node scripts/check-links.mjs"
+    "check:links": "node scripts/check-links.mjs",
+    "data:init": "node scripts/university-data/cli.mjs init-registry",
+    "data:discover": "node scripts/university-data/cli.mjs discover",
+    "data:ingest": "node scripts/university-data/cli.mjs ingest",
+    "data:review": "node scripts/university-data/cli.mjs review",
+    "data:approve": "node scripts/university-data/cli.mjs approve",
+    "data:diff": "node scripts/university-data/cli.mjs diff",
+    "data:check-freshness": "node scripts/university-data/cli.mjs check-freshness",
+    "data:coverage": "node scripts/university-data/cli.mjs coverage",
+    "data:status": "node scripts/university-data/cli.mjs status"
   },
   "dependencies": {
     "lucide-react": "0.544.0",

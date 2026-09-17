@@ -61,6 +61,28 @@ function excerptAround(text, index, length, pad = 110) {
     .trim();
 }
 
+/**
+ * The sentence containing a match.
+ *
+ * Qualifiers must be read from the sentence that owns the figure, never from a
+ * fixed character window. A page reading "tuition is $66,720 per year. Housing
+ * is $1,200 per month." would otherwise let "per month" contaminate the tuition
+ * figure — and the same mistake in reverse would let a monthly figure pass as
+ * annual, which understates cost of attendance roughly twelvefold.
+ */
+function sentenceAround(text, index, length) {
+  const before = text.lastIndexOf('.', index);
+  const newlineBefore = text.lastIndexOf('\n', index);
+  const start = Math.max(before, newlineBefore) + 1;
+
+  const after = text.indexOf('.', index + length);
+  const newlineAfter = text.indexOf('\n', index + length);
+  const candidates = [after, newlineAfter].filter((i) => i !== -1);
+  const end = candidates.length ? Math.min(...candidates) + 1 : text.length;
+
+  return text.slice(start, end).replace(/\s+/g, ' ').trim();
+}
+
 /* ------------------------------------------------------------------ */
 /* Academic year                                                       */
 /* ------------------------------------------------------------------ */
@@ -129,9 +151,11 @@ export function extractMoney(text) {
     const value = Number(raw);
     if (!Number.isFinite(value) || value <= 0) continue;
 
+    // Qualifiers come from the owning sentence; the excerpt may be wider.
+    const sentence = sentenceAround(text, m.index, m[0].length);
     const context = excerptAround(text, m.index, m[0].length, 140);
-    const perUnit = PER_UNIT_PATTERNS.find((p) => p.re.test(context));
-    const annual = /\b(per\s+(year|annum)|annual(ly)?|\/\s*year|a year|per academic year)\b/i.test(context);
+    const perUnit = PER_UNIT_PATTERNS.find((p) => p.re.test(sentence));
+    const annual = /\b(per\s+(year|annum)|annual(ly)?|\/\s*year|a year|per academic year)\b/i.test(sentence);
 
     out.push({
       value,
@@ -139,6 +163,7 @@ export function extractMoney(text) {
       unit: perUnit ? perUnit.unit : annual ? 'per-year' : 'unqualified',
       isAnnual: Boolean(annual) && !perUnit,
       excerpt: context,
+      sentence,
       index: m.index,
     });
   }
@@ -148,7 +173,7 @@ export function extractMoney(text) {
 /** Narrows money candidates to those whose context mentions a given concept. */
 export function moneyNear(text, keywords) {
   const re = new RegExp(`\\b(${keywords.join('|')})\\b`, 'i');
-  return extractMoney(text).filter((m) => re.test(m.excerpt));
+  return extractMoney(text).filter((m) => re.test(m.sentence ?? m.excerpt));
 }
 
 /* ------------------------------------------------------------------ */
@@ -165,9 +190,11 @@ export function moneyNear(text, keywords) {
  */
 export function extractIELTS(text) {
   const results = [];
-  const re = /IELTS[^.\n]{0,120}?(\d(?:\.\d)?)/gi;
+  // Matches a score on either side of the word IELTS: pages write both
+  // "IELTS 6.5 overall" and "a minimum of 6.0 in each IELTS component".
+  const re = /IELTS[^.\n]{0,120}?(\d(?:\.\d)?)|(\d(?:\.\d)?)[^.\n]{0,80}?IELTS/gi;
   for (const m of text.matchAll(re)) {
-    const score = Number(m[1]);
+    const score = Number(m[1] ?? m[2]);
     if (score < 4 || score > 9 || Math.round(score * 2) !== score * 2) continue;
     const context = excerptAround(text, m.index, m[0].length, 150);
     const isSection = /\b(no (band|sub-?score|component|section)|each (band|component|section|sub-?test)|any (band|component)|minimum of \d(?:\.\d)? in)\b/i.test(context);
