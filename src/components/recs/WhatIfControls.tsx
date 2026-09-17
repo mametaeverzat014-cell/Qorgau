@@ -1,10 +1,24 @@
 'use client';
 
 import { ArrowDown, ArrowUp, Globe2, Minus, RotateCcw, Sparkles, Wallet, X } from 'lucide-react';
+import { UNIVERSITIES } from '@/data/universities';
 import { COUNTRIES, type Country, type StudentProfile } from '@/lib/types';
 import { BUDGET_OPTIONS, applyBudgetOption, nearestBudgetOption } from '@/lib/engine/whatif';
 import type { WhatChanged } from '@/lib/engine/whatif';
 import { Badge, Button, Card, Tooltip } from '@/components/ui';
+
+/**
+ * How many curated universities each country actually holds.
+ *
+ * Shown on every chip on purpose. Our dataset is 35 hand-checked institutions,
+ * not a scrape, so some countries are thin — and a student deserves to know that
+ * before they scope their whole search to one, rather than discovering it from a
+ * short list they cannot explain.
+ */
+const COUNT_BY_COUNTRY = UNIVERSITIES.reduce<Record<string, number>>((acc, u) => {
+  acc[u.country] = (acc[u.country] ?? 0) + 1;
+  return acc;
+}, {});
 
 /** Countries the dataset actually covers, so no control leads to an empty result. */
 const QUICK_COUNTRIES: Country[] = [
@@ -32,6 +46,9 @@ export function WhatIfControls({
   dirty: boolean;
 }) {
   const activeBudget = nearestBudgetOption(profile);
+  const inScopeCount = profile.openToAnyCountry
+    ? UNIVERSITIES.length
+    : profile.preferredCountries.reduce((n, c) => n + (COUNT_BY_COUNTRY[c] ?? 0), 0);
 
   function toggleCountry(c: Country) {
     const has = profile.preferredCountries.includes(c);
@@ -112,25 +129,38 @@ export function WhatIfControls({
             </button>
             {QUICK_COUNTRIES.map((c) => {
               const active = !profile.openToAnyCountry && profile.preferredCountries.includes(c);
+              const count = COUNT_BY_COUNTRY[c] ?? 0;
               return (
                 <button
                   key={c}
                   onClick={() => toggleCountry(c)}
-                  className={`rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all duration-200 ${
+                  title={`${count} curated universit${count === 1 ? 'y' : 'ies'} in our dataset`}
+                  className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all duration-200 ${
                     active
                       ? 'border-ink bg-ink text-white'
                       : 'border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink'
                   }`}
                 >
                   {c}
+                  <span className={`tnum text-[11px] ${active ? 'text-white/60' : 'text-faint'}`}>
+                    {count}
+                  </span>
                 </button>
               );
             })}
           </div>
           <p className="mt-3 text-[12.5px] leading-[1.55] text-muted">
             {profile.openToAnyCountry
-              ? 'Every country in the dataset is in scope.'
-              : `Scoped to ${profile.preferredCountries.join(', ')}. Universities elsewhere stay visible but rank below every comparable in-scope option.`}
+              ? `All ${UNIVERSITIES.length} curated universities are in scope. The number on each chip is how many we hold for that country.`
+              : `Scoped to ${profile.preferredCountries.join(', ')} — ${inScopeCount} universit${
+                  inScopeCount === 1 ? 'y' : 'ies'
+                } in our dataset. Options elsewhere stay visible but rank below every comparable in-scope one.`}
+            {!profile.openToAnyCountry && inScopeCount < 3 && (
+              <span className="mt-1 block text-warn-700">
+                That is a thin slice of our curated set, so we widen the search to keep your list
+                useful. Add a second country for a tighter result.
+              </span>
+            )}
           </p>
         </div>
       </div>
