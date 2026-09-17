@@ -9,16 +9,17 @@
  *
  *   node scripts/university-data/cli.mjs <command> [--flags]
  *
- * Commands: init-registry, discover, ingest, review, approve, diff,
- *           check-freshness, coverage, status
+ * Commands: init-registry, discover, add-domain, probe-urls, ingest, review,
+ *           approve, diff, check-freshness, coverage, status
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   buildRegistry, loadRegistry, saveRegistry, getEntry, readCuratedUniversities,
-  REGISTRY_PATH, DATA_DIR, PAGE_KINDS,
+  addDomain, rootDomainOf, REGISTRY_PATH, DATA_DIR, PAGE_KINDS,
 } from './registry.mjs';
+import { isNonContentUrl } from './discovery.mjs';
 import { safeFetch, looksLikeChallenge, assertSafeId } from './safety.mjs';
 import {
   discover, fetchPages, extractFrom, validateCandidates,
@@ -64,8 +65,17 @@ async function cmdInitRegistry() {
     for (const e of built.universities) {
       const prev = existing.universities.find((u) => u.id === e.id);
       if (prev) {
-        e.pages = { ...e.pages, ...prev.pages };
-        e.allowedDomains = [...new Set([...e.allowedDomains, ...(prev.allowedDomains ?? [])])];
+        // Carry over discovered URLs, minus anything that is not a page. A
+        // sitemap recorded by an earlier build must not be preserved as
+        // "human-curated registry work".
+        const kept = Object.fromEntries(
+          Object.entries(prev.pages ?? {}).map(([k, u]) => [k, u && isNonContentUrl(u).nonContent ? null : u]),
+        );
+        e.pages = { ...e.pages, ...kept };
+        // Domains a human approved are kept; rebuilding the registry must never
+        // quietly narrow or widen an allow-list someone signed off on.
+        e.officialDomains = [...new Set([...e.officialDomains, ...(prev.officialDomains ?? prev.allowedDomains ?? [])])];
+        e.trustedSubdomains = [...new Set([...(prev.trustedSubdomains ?? [])])];
         e.discovery = prev.discovery ?? e.discovery;
       }
     }
@@ -81,19 +91,205 @@ async function cmdDiscover() {
   const id = flag('university');
   if (!id) { console.error(c.r('--university=<id> is required')); process.exit(1); }
   const entry = getEntry(registry, assertSafeId(id));
-  console.log(c.b(`Discovering official pages for ${entry.officialName}`));
-  console.log(c.dim(`  allowed domains: ${entry.allowedDomains.join(', ')}`));
+  const debug = has('debug');
 
-  const result = await discover(registry, id);
-  if (result.status === 'failed') {
-    console.log(c.y('  No pages reachable. If this environment has no network access, that is expected.'));
+  console.log(c.b(`Discovering official pages for ${entry.officialName}`));
+  console.log(c.dim(`  root:            ${entry.officialRootUrl}`));
+  console.log(c.dim(`  official domains: ${entry.officialDomains.join(', ') || '—'}`));
+  console.log(c.dim(`  trusted subdomains: ${entry.trustedSubdomains.join(', ') || '—'}`));
+
+  // Self-healing: an earlier build could record a sitemap as a source page.
+  // Purge anything the current rules would never accept before writing new
+  // results, so a bad URL cannot survive in a registry indefinitely.
+  const purged = [];
+  for (const [kind, url] of Object.entries(entry.pages ?? {})) {
+    if (url && isNonContentUrl(url).nonContent) { entry.pages[kind] = null; purged.push(`${kind}: ${url}`); }
   }
-  for (const [kind, page] of Object.entries(result.found)) {
+  if (purged.length) {
+    console.log(c.y(`\n  Removed ${purged.length} stored URL(s) that are not pages:`));
+    for (const line of purged) console.log(c.dim(`    ${line}`));
+  }
+
+  const result = await discover(registry, id, { debug });
+  const d = result.diagnostics;
+
+  console.log(c.b('\nWhat was inspected'));
+  console.log(`  sitemaps named in robots.txt: ${d.robotsSitemaps.length}`);
+  for (const sm of d.robotsSitemaps.slice(0, 10)) console.log(c.dim(`    ${sm}`));
+  console.log(`  sitemap documents fetched:    ${d.sitemapsFetched}`);
+  console.log(`  URLs discovered in sitemaps:  ${d.sitemapUrlsDiscovered}`);
+  console.log(`  non-content URLs skipped:     ${d.nonContentUrlsSkipped} ${c.dim('(sitemaps, feeds, assets — never evidence)')}`);
+  console.log(`  candidate URLs considered:    ${d.candidatesConsidered}`);
+  console.log(`  pages fetched:                ${d.pagesFetched}`);
+  console.log(`  pages classified by content:  ${d.pagesClassified}`);
+  console.log(`  HTTP requests total:          ${d.requests}${d.budgetExhausted ? c.y('  (budget exhausted)') : ''}`);
+
+  console.log(c.b('\nFOUND'));
+  const foundEntries = Object.entries(result.found);
+  if (foundEntries.length === 0) console.log(c.dim('  nothing'));
+  for (const [kind, page] of foundEntries) {
     entry.pages[kind] = page.url;
-    console.log(`  ${c.g('found')} ${kind}: ${page.url}`);
+    console.log(`  ${c.g(kind)}  ${c.dim(`score ${page.score}`)}`);
+    console.log(`    ${page.url}`);
+    if (page.title) console.log(c.dim(`    title: ${page.title}`));
+    console.log(c.dim(`    why:   ${page.reasons.join('; ')}`));
+    console.log(c.dim(`    via:   ${page.discoveredVia}  ·  signal: ${page.contentSignal}`));
+    if (page.requiresManualReading) console.log(c.y('    PDF — values must be read by a human, nothing here parses PDF text'));
   }
-  entry.discovery = { status: result.status, lastAttemptedAt: new Date().toISOString(), notes: `${result.requests} requests` };
+
+  console.log(c.b('\nNOT FOUND'));
+  if (result.notFound.length === 0) console.log(c.dim('  —'));
+  for (const kind of result.notFound) {
+    console.log(`  ${c.y(kind)} ${c.dim('— no page on an approved domain both matched and said so in its own content')}`);
+  }
+
+  if (result.manualReview.length) {
+    console.log(c.b('\nFOR MANUAL READING'));
+    for (const m of result.manualReview) console.log(`  ${m.url}\n    ${c.dim(m.reason)}`);
+  }
+
+  if (debug) {
+    console.log(c.b('\nDEBUG — every candidate, in order'));
+    for (const row of result.debug) {
+      const mark = row.decision === 'accepted' ? c.g('✓') : row.decision === 'rejected' ? c.r('✗') : c.y('·');
+      console.log(`  ${mark} [${row.stage}] ${row.url}`);
+      console.log(c.dim(`      status: ${row.status ?? '—'}   type: ${row.contentType ?? '—'}   decision: ${row.decision}`));
+      if (row.scores?.length) console.log(c.dim(`      scores: ${row.scores.join('  ')}`));
+      if (row.reason) console.log(c.dim(`      reason: ${row.reason}`));
+    }
+  }
+
+  if (result.status === 'failed') {
+    console.log(c.y('\n  No pages classified. If this environment has no network access, that is expected.'));
+  }
+
+  entry.discovery = {
+    status: result.status,
+    lastAttemptedAt: new Date().toISOString(),
+    notes: `${d.requests} requests, ${d.pagesClassified} pages classified, ${foundEntries.length}/${PAGE_KINDS.length} kinds found`,
+  };
   saveRegistry(registry);
+  console.log(c.dim(`\nregistry updated: ${REGISTRY_PATH}`));
+  console.log(c.dim('Discovery records URLs only. No value has been extracted, and nothing has reached production data.'));
+}
+
+/* ------------------------------------------------------------------ */
+/* Domain approval                                                     */
+/* ------------------------------------------------------------------ */
+
+function cmdAddDomain() {
+  const registry = requireRegistry();
+  const id = flag('university');
+  const domain = flag('domain');
+  if (!id || !domain || domain === true) {
+    console.error(c.r('--university=<id> and --domain=<domain> are required'));
+    process.exit(1);
+  }
+  const entry = getEntry(registry, assertSafeId(id));
+  const scope = has('official') ? 'official' : 'subdomain';
+  if (!has('yes')) {
+    console.error(c.r('Refusing to widen an allow-list without --yes.'));
+    console.error(c.dim(`  This would let ${domain} produce evidence for ${entry.officialName}.`));
+    console.error(c.dim('  Check the domain really belongs to the institution first, then pass --yes.'));
+    console.error(c.dim(`  --official allows every subdomain of it; the default approves just this host.`));
+    process.exit(1);
+  }
+  const res = addDomain(entry, String(domain), { scope });
+  saveRegistry(registry);
+  console.log(res.already ? `${c.y('·')} ${res.domain} was already allowed` : `${c.g('✓')} ${res.domain} added as ${scope}`);
+  console.log(c.dim(`  allow-list is now: ${entry.allowedDomains.join(', ')}`));
+}
+
+/* ------------------------------------------------------------------ */
+/* Official-URL investigation                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mechanical variants of a URL that is not responding.
+ *
+ * Every variant is derived from the URL already in the dataset — dropping a
+ * `www.`, adding one, or climbing to the parent host. None of them comes from
+ * anything remembered about the institution, because a plausible-looking
+ * replacement URL is precisely the failure this pipeline exists to prevent.
+ */
+function urlVariants(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { return []; }
+  const host = u.hostname.toLowerCase();
+  const out = new Set();
+  const add = (h) => { if (h && h.includes('.')) out.add(`https://${h}${u.pathname === '/' ? '' : u.pathname}`); };
+
+  if (host.startsWith('www.')) add(host.slice(4));
+  else add(`www.${host}`);
+
+  // Climb one label at a time, keeping the registrable domain intact.
+  const labels = host.split('.');
+  const base = rootDomainOf(`https://${host}`);
+  const baseLabels = base.split('.').length;
+  for (let i = 1; labels.length - i >= baseLabels; i++) {
+    add(labels.slice(i).join('.'));
+    add(`www.${labels.slice(i).join('.')}`);
+  }
+  out.delete(`https://${host}${u.pathname === '/' ? '' : u.pathname}`);
+  return [...out];
+}
+
+async function cmdProbeUrls() {
+  const registry = requireRegistry();
+  const onlyId = flag('university');
+  const targets = onlyId ? [getEntry(registry, assertSafeId(onlyId))] : registry.universities;
+  const curated = readCuratedUniversities();
+
+  console.log(c.b('\nProbing officialUrl for each institution'));
+  console.log(c.dim('  Variants are mechanical rewrites of the URL already on record. This command'));
+  console.log(c.dim('  never proposes a URL from memory and never edits the dataset.\n'));
+
+  const report = { checkedAt: new Date().toISOString(), ok: [], broken: [] };
+
+  for (const entry of targets) {
+    const u = curated.find((x) => x.id === entry.id);
+    const url = u?.officialUrl ?? entry.officialRootUrl;
+    if (!url) continue;
+    const res = await safeFetch(url, entry.allowedDomains);
+    const healthy = res.ok && !(res.text && looksLikeChallenge(res.text));
+    if (healthy) {
+      report.ok.push({ id: entry.id, url, status: res.status, finalUrl: res.url });
+      console.log(`${c.g('OK')}      ${entry.id.padEnd(16)} ${url}${res.url !== url ? c.dim(`  -> ${res.url}`) : ''}`);
+      continue;
+    }
+
+    const failure = res.ok ? 'bot challenge page' : res.reason;
+    console.log(`${c.r('BROKEN')}  ${entry.id.padEnd(16)} ${url}`);
+    console.log(c.dim(`          ${failure}`));
+
+    const alternatives = [];
+    for (const variant of urlVariants(url)) {
+      // A variant on a host outside the allow-list is reported, never fetched.
+      const allowed = entry.allowedDomains.some((d) => {
+        try { const h = new URL(variant).hostname; return h === d || h.endsWith(`.${d}`); } catch { return false; }
+      });
+      if (!allowed) { alternatives.push({ url: variant, result: 'outside the approved domains for this institution' }); continue; }
+      const vr = await safeFetch(variant, entry.allowedDomains);
+      const vHealthy = vr.ok && !(vr.text && looksLikeChallenge(vr.text));
+      alternatives.push({ url: variant, result: vHealthy ? `responds ${vr.status}` : (vr.reason ?? 'no response'), responds: vHealthy, finalUrl: vr.url });
+      console.log(`          ${vHealthy ? c.g('responds') : c.dim('no')}  ${variant}${vHealthy && vr.url !== variant ? c.dim(`  -> ${vr.url}`) : ''}`);
+    }
+
+    report.broken.push({ id: entry.id, url, reason: failure, status: res.status, alternatives });
+  }
+
+  const out = join(DATA_DIR, 'url-probe-report.json');
+  writeFileSync(out, JSON.stringify(report, null, 2) + '\n');
+  console.log(`\n${c.g(String(report.ok.length))} reachable · ${c.r(String(report.broken.length))} broken`);
+  console.log(c.dim(`report: ${out}`));
+  if (report.broken.length) {
+    console.log(c.b('\nWhat to do with a broken URL'));
+    console.log('  1. Open the institution and confirm the real address yourself.');
+    console.log('  2. Edit officialUrl in src/data/universities.ts.');
+    console.log('  3. Run: npm run check:links');
+    console.log(c.dim('  A variant that responds is a lead, not a confirmation. A parked domain answers 200 too.'));
+  }
+  if (report.broken.length > 0 && has('strict')) process.exit(1);
 }
 
 async function cmdIngest() {
@@ -280,6 +476,13 @@ async function cmdCheckFreshness() {
 
     const approved = loadApproved(entry.id);
     for (const [kind, url] of urls) {
+      const nonContent = isNonContentUrl(url);
+      if (nonContent.nonContent) {
+        // A sitemap recorded as a source page would hash cleanly forever and
+        // look permanently healthy. Report it as broken, because it is.
+        report.broken.push({ id: entry.id, kind, url, reason: `not a page: ${nonContent.reason}`, status: 0 });
+        continue;
+      }
       const res = await safeFetch(url, entry.allowedDomains);
       if (!res.ok) {
         report.broken.push({ id: entry.id, kind, url, reason: res.reason, status: res.status });
@@ -373,6 +576,8 @@ function cmdStatus() {
 const COMMANDS = {
   'init-registry': cmdInitRegistry,
   discover: cmdDiscover,
+  'add-domain': cmdAddDomain,
+  'probe-urls': cmdProbeUrls,
   ingest: cmdIngest,
   review: cmdReview,
   approve: cmdApprove,
@@ -387,7 +592,9 @@ if (!fn) {
   console.log(c.b('AdmitPath university data pipeline\n'));
   console.log('Commands:');
   console.log('  init-registry                        build/refresh the registry from the curated dataset');
-  console.log('  discover        --university=<id>    find official pages (needs network)');
+  console.log('  discover        --university=<id> [--debug]   find official pages (needs network)');
+  console.log('  add-domain      --university=<id> --domain=<d> [--official] --yes');
+  console.log('  probe-urls      [--university=<id>] [--strict]  check officialUrl, suggest mechanical variants');
   console.log('  ingest          --university=<id>    fetch, extract, validate -> candidates');
   console.log('  review          --university=<id>    show candidates with evidence and diffs');
   console.log('  approve         --university=<id> --fields=a,b --yes');

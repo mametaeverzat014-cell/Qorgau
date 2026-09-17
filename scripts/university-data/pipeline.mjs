@@ -16,7 +16,8 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { DATA_DIR, getEntry, PAGE_KINDS } from './registry.mjs';
-import { safeFetch, isAllowedUrl, looksLikeChallenge, LIMITS, assertSafeId } from './safety.mjs';
+import { safeFetch, looksLikeChallenge, assertSafeId } from './safety.mjs';
+import { discoverPages, isNonContentUrl } from './discovery.mjs';
 import {
   htmlToText, pageTitle, detectAcademicYear, moneyNear, extractIELTS, extractTOEFL,
   extractTestingPolicy, extractAidPolicy, extractDeadlines, extractCommonDataSet,
@@ -35,75 +36,16 @@ export const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 /* ------------------------------------------------------------------ */
 
 /**
- * Candidate paths for each page kind.
- *
- * These are *guesses to try*, not recorded facts — a 200 response is what makes
- * a URL real, and anything that does not respond is simply never recorded. This
- * is why the registry ships with null page URLs rather than these strings.
- */
-const CANDIDATE_PATHS = {
-  admissions: ['/admissions', '/apply', '/undergraduate/admissions'],
-  international_admissions: ['/admissions/international', '/international/admissions', '/international-students'],
-  tuition: ['/tuition', '/fees', '/admissions/tuition', '/tuition-and-fees'],
-  cost_of_attendance: ['/cost-of-attendance', '/cost', '/financial-aid/cost-of-attendance'],
-  financial_aid: ['/financial-aid', '/finaid', '/aid'],
-  international_financial_aid: ['/financial-aid/international', '/finaid/international'],
-  scholarships: ['/scholarships', '/financial-aid/scholarships'],
-  testing_policy: ['/admissions/testing', '/apply/testing', '/standardized-testing'],
-  english_requirements: ['/admissions/english', '/english-language-requirements'],
-  deadlines: ['/admissions/deadlines', '/apply/deadlines'],
-  programs: ['/academics', '/programs', '/undergraduate/programs'],
-  common_data_set: ['/common-data-set', '/ir/common-data-set', '/institutional-research/common-data-set'],
-};
-
-/**
  * Discovers official pages for one institution.
  *
- * Deterministic and bounded: sitemap first where available, then a small set of
- * conventional paths, capped by LIMITS.maxPagesPerDomain. There is no crawling —
- * the pipeline never follows arbitrary links looking for more pages.
+ * The work lives in discovery.mjs; this wrapper only adapts the result to the
+ * shape the registry stores. See that module for why a sitemap can never come
+ * back from here as an admissions page.
  */
-export async function discover(registry, id, { log = console.log } = {}) {
+export async function discover(registry, id, { log = console.log, debug = false, fetchImpl } = {}) {
   const entry = getEntry(registry, id);
-  const found = {};
-  let requests = 0;
-
-  const tryUrl = async (kind, url) => {
-    if (requests >= LIMITS.maxPagesPerDomain) return false;
-    if (!isAllowedUrl(url, entry.allowedDomains).ok) return false;
-    requests++;
-    const res = await safeFetch(url, entry.allowedDomains);
-    if (res.ok && res.text && !looksLikeChallenge(res.text)) {
-      found[kind] = { url: res.url, title: pageTitle(res.text), status: res.status };
-      return true;
-    }
-    return false;
-  };
-
-  // 1. Sitemap — deterministic and cheap when it exists.
-  const sitemapUrl = new URL('/sitemap.xml', entry.officialRootUrl).toString();
-  const sitemap = await safeFetch(sitemapUrl, entry.allowedDomains, { accept: 'application/xml,text/xml' });
-  requests++;
-  const sitemapUrls = sitemap.ok && sitemap.text
-    ? [...sitemap.text.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]).slice(0, 3000)
-    : [];
-
-  for (const kind of PAGE_KINDS) {
-    if (found[kind]) continue;
-    const hints = CANDIDATE_PATHS[kind] ?? [];
-    const fromSitemap = sitemapUrls.find((u) =>
-      hints.some((h) => u.toLowerCase().includes(h.replace(/^\//, ''))),
-    );
-    if (fromSitemap && (await tryUrl(kind, fromSitemap))) continue;
-    for (const path of hints) {
-      const url = new URL(path, entry.officialRootUrl).toString();
-      if (await tryUrl(kind, url)) break;
-    }
-  }
-
-  const status = Object.keys(found).length > 0 ? 'partial' : 'failed';
-  log(`  discovery: ${Object.keys(found).length}/${PAGE_KINDS.length} page kinds found in ${requests} requests`);
-  return { found, requests, status };
+  const result = await discoverPages(entry, { log, debug, ...(fetchImpl ? { fetchImpl } : {}) });
+  return { ...result, requests: result.diagnostics.requests };
 }
 
 /* ------------------------------------------------------------------ */
@@ -114,10 +56,31 @@ export async function fetchPages(registry, id, { log = console.log } = {}) {
   const entry = getEntry(registry, id);
   const outDir = ensure(dirFor('raw', id));
   const manifest = { id, fetchedAt: new Date().toISOString(), documents: [], failures: [] };
+  /** One page can legitimately serve several kinds; fetch it once, record it per kind. */
+  const byUrl = new Map();
 
   for (const kind of PAGE_KINDS) {
     const url = entry.pages?.[kind];
     if (!url) continue;
+    // Defence in depth. Discovery already refuses to classify a sitemap, but a
+    // registry file is a text file a human can edit, and a sitemap recorded as
+    // a tuition page would hash cleanly and look perfectly healthy forever.
+    const nonContent = isNonContentUrl(url);
+    if (nonContent.nonContent) {
+      manifest.failures.push({ kind, url, reason: `not a page: ${nonContent.reason}`, status: 0 });
+      log(`  ${kind}: REFUSED (${nonContent.reason})`);
+      continue;
+    }
+
+    const cached = byUrl.get(url);
+    if (cached) {
+      // Same document, separate evidence entry — the extractor reads it once per
+      // kind, so tuition and cost-of-attendance each get their own provenance.
+      manifest.documents.push({ ...cached, kind });
+      log(`  ${kind}: ${cached.bytes} bytes (same page as ${cached.kind})`);
+      continue;
+    }
+
     const res = await safeFetch(url, entry.allowedDomains);
     if (!res.ok) {
       manifest.failures.push({ kind, url, reason: res.reason, status: res.status });
@@ -132,12 +95,21 @@ export async function fetchPages(registry, id, { log = console.log } = {}) {
       continue;
     }
     const isPdf = res.contentType === 'application/pdf';
+    if (res.contentType === 'application/xml' || res.contentType === 'text/xml') {
+      // XML is fetchable so sitemaps can be read during discovery. It is never
+      // a source document.
+      manifest.failures.push({ kind, url, reason: `${res.contentType} is a machine-readable index, not a page`, status: res.status });
+      log(`  ${kind}: REFUSED (${res.contentType})`);
+      continue;
+    }
     const file = `${kind}.${isPdf ? 'pdf' : 'html'}`;
     writeFileSync(join(outDir, file), res.body);
-    manifest.documents.push({
+    const doc = {
       kind, url: res.url, file, contentType: res.contentType,
       bytes: res.body.length, contentHash: sha256(res.body), retrievedAt: new Date().toISOString(),
-    });
+    };
+    manifest.documents.push(doc);
+    byUrl.set(url, doc);
     log(`  ${kind}: ${res.body.length} bytes`);
   }
 
@@ -249,9 +221,15 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
     }
     if (doc.kind === 'deadlines' || doc.kind === 'admissions' || doc.kind === 'scholarships') {
       const ds = extractDeadlines(text);
+      // Only create a field group when there is something in it. An empty group
+      // is worse than no group: it reports "2 field groups extracted" while
+      // validation silently skips both, which is exactly how a run can look
+      // productive and produce nothing.
       for (const field of ['applicationDeadline', 'scholarshipDeadline']) {
+        const rows = ds.map((d) => ({ ...d, evidence: evidenceFrom(doc, st, { excerpt: d.excerpt }), confidence: 0.75 }));
+        if (rows.length === 0) continue;
         candidates[field] ??= [];
-        candidates[field].push(...ds.map((d) => ({ ...d, evidence: evidenceFrom(doc, st, { excerpt: d.excerpt }), confidence: 0.75 })));
+        candidates[field].push(...rows);
       }
     }
     if (doc.kind === 'financial_aid' || doc.kind === 'international_financial_aid' || doc.kind === 'scholarships') {

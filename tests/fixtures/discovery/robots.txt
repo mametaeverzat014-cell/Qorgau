@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /search
+Disallow: /admin
+
+Sitemap: https://nbitadmissions.org/sitemap.xml
+Sitemap: https://not-northbridge.example.net/sitemap.xml

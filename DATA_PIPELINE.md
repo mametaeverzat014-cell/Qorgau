@@ -105,11 +105,114 @@ Every rule exists because of a specific way this data goes confidently wrong.
 
 ---
 
+---
+
+## Discovery
+
+Finding an institution's official pages is the step that most easily produces
+confident nonsense, so it is the step with the most rules.
+
+### What went wrong once
+
+A real run against MIT reported `1/12 page kinds found in 25 requests`, and the
+one page it "found" was:
+
+```
+admissions: https://mitadmissions.org/sitemap-misc.xml
+```
+
+Two bugs combined. Candidate hints were matched against the **whole URL string**,
+and the host `mitadmissions.org` literally contains the substring `admissions` —
+so every URL on that host matched the admissions hint, and the first `<loc>` in
+the sitemap index won. Nothing then looked at what the document actually said, so
+a sitemap became an admissions page. Ingestion afterwards produced 1,047 bytes of
+XML, two empty field groups and zero proposals.
+
+### The rules now
+
+1. **A sitemap is a discovery source, never evidence.** `sitemap.xml`,
+   `sitemap-*.xml`, a sitemap index, `robots.txt`, feeds and static assets are
+   refused by `isNonContentUrl` before they can become candidates, again after
+   redirects, again at fetch time, and again in the freshness check. `discover`
+   also purges any such URL a previous run stored.
+2. **Hostnames are never matched against topic keywords.** Path scoring reads
+   `URL.pathname` only. `mitadmissions.org/sitemap-misc.xml` scores **0** for
+   admissions, and for all eleven other kinds.
+3. **A URL match alone never classifies a page.** Every candidate is fetched and
+   scored on what it says: `<title>` (weight 3), H1-H3 (2) and body text (1,
+   capped at four distinct hits). A phrase counts for more than a word. A
+   candidate with zero signal from the document itself is rejected regardless of
+   how suggestive its URL is.
+4. **Required terms per kind.** `international_financial_aid` needs an
+   international term *and* an aid term, so it cannot swallow every aid page.
+5. **Negative signals.** News, blog, press, directory, login and archive pages
+   are penalised. A news story headlined "Admissions office moves building" that
+   mentions tuition is rejected.
+6. **One page may support several kinds.** A "Tuition and Fees" page that also
+   states a cost of attendance is recorded for both, and evidence is attached per
+   field, not per page.
+
+### The flow
+
+```
+root domain
+  -> robots.txt              Sitemap: directives, allow-list checked per entry
+  -> sitemap(s)              a <loc> that is itself a sitemap is followed, not classified,
+                             even if the document claims to be a <urlset>
+  -> recurse                 depth <= 3, <= 12 sitemap fetches, <= 20,000 URLs
+  -> rank candidates         by path score, top 4 per kind, plus conventional paths
+  -> fetch                   <= 45 pages, allow-listed, size/redirect/timeout capped
+  -> classify by content     title + headings + body + path + sitemap context
+  -> retain the strongest    per kind
+```
+
+### PDFs
+
+A PDF is recognised as an official document — URL, title, academic year and
+retrieval date are preserved — but nothing here reads PDF body text. It is
+classified only from the title the document states about itself, or from a short
+list of unambiguous filename phrases (`common data set`, `cost of attendance`,
+`tuition and fees`, `fee schedule`). Anything else is listed under **FOR MANUAL
+READING** rather than classified. Every discovered PDF is marked
+`requiresManualReading`.
+
+### What `discover` prints
+
+Pages inspected, sitemap URLs discovered, non-content URLs skipped, candidates
+considered, pages fetched, pages classified and total requests; then **FOUND**
+with each URL, its score and the reason it was accepted; then an explicit **NOT
+FOUND** list. `--debug` adds every candidate with its HTTP status, content type,
+per-kind scores and the accept/reject reason.
+
+### Domains
+
+An institution rarely lives on one domain. The registry carries two lists:
+
+| `officialDomains` | registrable domains the institution owns; any subdomain may produce evidence |
+| `trustedSubdomains` | individual approved hostnames outside those domains |
+
+`allowedDomains` is the derived union and is what the fetch layer reads. It is
+never hand-edited. Widening it is a human decision:
+
+```bash
+npm run data:add-domain -- --university=<id> --domain=registrar.example.edu --yes
+npm run data:add-domain -- --university=<id> --domain=example-aid.org --official --yes
+```
+
+Each entry is seeded with exactly one domain — the one its `officialUrl` points
+at. It is deliberately not expanded from memory; a person checks that a domain
+really is official before approving it.
+
+---
+
 ## Commands
 
 ```bash
 npm run data:init                                  # build the registry
 npm run data:discover -- --university=mit          # find official pages (needs network)
+npm run data:discover -- --university=mit --debug  # ...and print every candidate and why
+npm run data:add-domain -- --university=mit --domain=<d> [--official] --yes
+npm run data:probe-urls                            # check officialUrl, suggest mechanical variants
 npm run data:ingest   -- --university=mit          # fetch -> extract -> validate
 npm run data:review   -- --university=mit          # show candidates, evidence, diffs
 npm run data:approve  -- --university=mit --fields=tuition,minimumIELTS --yes
@@ -195,9 +298,15 @@ Consequently:
   happened.
 - Registry page URLs are `null` rather than guessed. Guessing them is exactly
   what produced the 404s.
+- Four `officialUrl` values in the shipped dataset do not respond
+  (`u-tokyo.ac.jp`, `skku.edu`, `admissions.purdue.edu`, `postech.ac.kr`).
+  `npm run data:probe-urls` reports them and lists mechanical variants of the
+  URL already on record — dropping a `www.`, climbing to the parent host. It
+  does not propose a replacement from memory and does not edit the dataset. A
+  variant that responds is a lead, not a confirmation.
 
-What is proven: 59 tests exercise extraction, validation, the security gate and
-the approval gate, including an end-to-end fixture run from HTML through to a
+What is proven: 99 tests exercise discovery, extraction, validation, the security
+gate and the approval gate, including an end-to-end fixture run from HTML through to a
 verdict. Twelve red-team scenarios — monthly housing, mixed academic years,
 domestic-only scholarships, stale SAT policy text, old PDFs, aggregator domains,
 hostile redirects, bot challenges, low confidence, blank pages, disagreeing
@@ -212,9 +321,18 @@ access. Nothing else is required.
 1. **PDFs are fetched but not parsed.** No text layer and no OCR ship with this
    pipeline, because a half-working PDF parser produces confident-looking
    garbage. PDFs are flagged for manual reading instead.
-2. **Discovery is conventional-path based**, so institutions with unusual URL
-   structures will need registry entries added by hand.
-3. **No LLM extraction layer.** The optional-LLM design in the brief is
+2. **Discovery has not been run against a live site.** It is exercised against
+   realistic fixtures — a sitemap index, three child sitemaps, four real-shaped
+   pages, a news page, two PDFs and a hostile hostname — but fixtures are not
+   the internet. Against MIT from this environment every request returns HTTP
+   403 at the egress proxy, and discovery correctly reports **0/12 found** and
+   records nothing.
+3. **Each institution starts with one allowed domain.** Real institutions spread
+   admissions, the registrar, student financial services and institutional
+   research across several. Until a person approves the others with
+   `data:add-domain`, discovery cannot see them — which is a deliberate
+   trade: a narrow allow-list finds less and invents nothing.
+4. **No LLM extraction layer.** The optional-LLM design in the brief is
    deliberately not implemented: every field the engine scores on can be parsed
    deterministically, and adding a model would introduce a candidate source that
    cannot be audited for no accuracy gain.

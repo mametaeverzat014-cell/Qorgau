@@ -19,3 +19,4 @@ npm-debug.log*
 data/raw/
 data/extracted/
 data/freshness-report.json
+data/url-probe-report.json

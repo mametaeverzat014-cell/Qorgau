@@ -33,6 +33,11 @@ export interface RegistryEntry {
   shortName: string | null;
   country: string | null;
   region: string | null;
+  /** Registrable domains the institution owns; subdomains are allowed. */
+  officialDomains: string[];
+  /** Individually approved hostnames outside officialDomains. */
+  trustedSubdomains: string[];
+  /** Derived union of the two lists. The fetch layer reads this. */
   allowedDomains: string[];
   officialRootUrl: string;
   pages: Record<string, string | null>;
@@ -52,3 +57,11 @@ export function buildRegistry(): Registry;
 export function loadRegistry(): Registry | null;
 export function saveRegistry(registry: Registry): string;
 export function getEntry(registry: Registry, id: string): RegistryEntry;
+export function resolveAllowedDomains(entry: Partial<RegistryEntry>): string[];
+export function normalizeEntry(entry: Partial<RegistryEntry>): RegistryEntry;
+export function assertPlausibleDomain(domain: string): string;
+export function addDomain(
+  entry: RegistryEntry,
+  domain: string,
+  opts?: { scope?: 'official' | 'subdomain' },
+): { domain: string; scope: string; already: boolean };

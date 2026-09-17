@@ -5,6 +5,21 @@
  * domains may speak for it. Discovery can propose URLs and fetching can follow
  * redirects, but nothing outside these domains can ever become evidence.
  *
+ * Institutions rarely live on one domain. Admissions, the registrar, student
+ * financial services and institutional research are often separate hosts, and
+ * sometimes separate registrable domains altogether. The model therefore has
+ * two lists:
+ *
+ *   officialDomains     registrable domains the institution owns; any subdomain
+ *                       of one of these may produce evidence
+ *   trustedSubdomains   individual hostnames on domains the institution does
+ *                       not own outright, approved one at a time
+ *
+ * `allowedDomains` is the union of the two and is what the fetch layer reads.
+ * It is derived, never hand-edited, and recomputed on every load and save.
+ * Adding a domain is a human decision: `cli.mjs add-domain --yes`. Nothing in
+ * discovery can widen the allow-list on its own.
+ *
  * Entries are seeded from the officialUrl already present in the curated
  * dataset. Known page URLs start empty on purpose: this environment has no
  * network access, and inventing an admissions URL is exactly the mistake that
@@ -100,6 +115,63 @@ export function rootDomainOf(url) {
   return parts.slice(-2).join('.');
 }
 
+/**
+ * The union of official domains and individually trusted subdomains.
+ *
+ * Legacy entries that only carry `allowedDomains` are read as if that list were
+ * `officialDomains`, so an older registry file keeps working unchanged.
+ */
+export function resolveAllowedDomains(entry) {
+  const official = entry.officialDomains ?? entry.allowedDomains ?? [];
+  const subs = entry.trustedSubdomains ?? [];
+  return [...new Set([...official, ...subs].map((d) => String(d).toLowerCase().replace(/^\.+/, '').replace(/\.+$/, '')))]
+    .filter(Boolean);
+}
+
+/** Migrates an entry to the two-list domain model and recomputes allowedDomains. */
+export function normalizeEntry(entry) {
+  entry.officialDomains ??= [...(entry.allowedDomains ?? [])];
+  entry.trustedSubdomains ??= [];
+  entry.allowedDomains = resolveAllowedDomains(entry);
+  return entry;
+}
+
+/**
+ * Rejects anything that is not a plain public domain name.
+ *
+ * The allow-list is the only thing standing between the fetcher and the rest of
+ * the network, so a bad entry here is worth more than a bad entry anywhere else
+ * in the pipeline.
+ */
+export function assertPlausibleDomain(domain) {
+  const d = String(domain).toLowerCase().trim();
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(d)) {
+    throw new Error(`"${domain}" is not a domain name`);
+  }
+  if (d.split('.').length < 2) throw new Error(`"${domain}" has no public suffix`);
+  if (/^\d+(\.\d+)*$/.test(d)) throw new Error(`"${domain}" looks like an IP address`);
+  for (const bad of ['localhost', 'local', 'internal', 'test', 'invalid', 'example']) {
+    if (d === bad || d.endsWith(`.${bad}`)) throw new Error(`"${domain}" is not a public domain`);
+  }
+  return d;
+}
+
+/**
+ * Adds a domain to an institution's allow-list.
+ *
+ * `scope` is "official" for a registrable domain the institution owns (its
+ * subdomains are then allowed too) or "subdomain" for a single approved host.
+ */
+export function addDomain(entry, domain, { scope = 'subdomain' } = {}) {
+  const d = assertPlausibleDomain(domain);
+  normalizeEntry(entry);
+  const list = scope === 'official' ? entry.officialDomains : entry.trustedSubdomains;
+  const already = entry.allowedDomains.includes(d);
+  if (!list.includes(d)) list.push(d);
+  entry.allowedDomains = resolveAllowedDomains(entry);
+  return { domain: d, scope, already };
+}
+
 /** Builds a registry skeleton from the curated dataset. */
 export function buildRegistry() {
   const entries = readCuratedUniversities().map((u) => {
@@ -111,7 +183,16 @@ export function buildRegistry() {
       shortName: u.shortName,
       country: u.country,
       region: u.region,
-      /** Only these domains may produce evidence for this institution. */
+      /**
+       * Registrable domains this institution owns. Seeded from the one domain
+       * the curated officialUrl points at — deliberately not expanded from
+       * memory. Real institutions have more; a human adds them with
+       * `add-domain` once they have checked the domain really is official.
+       */
+      officialDomains: [domain],
+      /** Individually approved hostnames outside officialDomains. */
+      trustedSubdomains: [],
+      /** Derived union; the fetch layer reads this. Never hand-edit. */
       allowedDomains: [domain],
       officialRootUrl: u.officialUrl,
       /**
@@ -130,20 +211,23 @@ export function buildRegistry() {
     version: 1,
     generatedAt: new Date().toISOString(),
     note:
-      'allowedDomains is the root of trust for ingestion. A document from any other domain cannot become evidence, even if an official page links to it.',
+      'allowedDomains is derived from officialDomains + trustedSubdomains and is the root of trust for ingestion. A document from any other domain cannot become evidence, even if an official page links to it. Widening the list is a human decision (cli.mjs add-domain --yes).',
     universities: entries,
   };
 }
 
 export function loadRegistry() {
   try {
-    return JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'));
+    const r = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'));
+    for (const e of r.universities ?? []) normalizeEntry(e);
+    return r;
   } catch {
     return null;
   }
 }
 
 export function saveRegistry(registry) {
+  for (const e of registry.universities ?? []) normalizeEntry(e);
   mkdirSync(dirname(REGISTRY_PATH), { recursive: true });
   writeFileSync(REGISTRY_PATH, JSON.stringify(registry, null, 2) + '\n');
   return REGISTRY_PATH;
@@ -152,5 +236,5 @@ export function saveRegistry(registry) {
 export function getEntry(registry, id) {
   const e = registry.universities.find((u) => u.id === id);
   if (!e) throw new Error(`unknown university id "${id}" — not in the registry`);
-  return e;
+  return normalizeEntry(e);
 }

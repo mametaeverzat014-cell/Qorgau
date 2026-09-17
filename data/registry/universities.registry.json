@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-17T17:05:44.566Z",
-  "note": "allowedDomains is the root of trust for ingestion. A document from any other domain cannot become evidence, even if an official page links to it.",
+  "generatedAt": "2026-09-17T17:49:41.917Z",
+  "note": "allowedDomains is derived from officialDomains + trustedSubdomains and is the root of trust for ingestion. A document from any other domain cannot become evidence, even if an official page links to it. Widening the list is a human decision (cli.mjs add-domain --yes).",
   "universities": [
     {
       "id": "harvard",
@@ -9,6 +9,10 @@
       "shortName": "Harvard",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "harvard.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "harvard.edu"
       ],
@@ -39,6 +43,10 @@
       "shortName": "MIT",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "mitadmissions.org"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "mitadmissions.org"
       ],
@@ -58,9 +66,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-17T17:50:36.243Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -69,6 +77,10 @@
       "shortName": "Princeton",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "princeton.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "princeton.edu"
       ],
@@ -99,6 +111,10 @@
       "shortName": "Yale",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "yale.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "yale.edu"
       ],
@@ -129,6 +145,10 @@
       "shortName": "Stanford",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "stanford.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "stanford.edu"
       ],
@@ -159,6 +179,10 @@
       "shortName": "NYU",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "nyu.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "nyu.edu"
       ],
@@ -189,6 +213,10 @@
       "shortName": "UIUC",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "illinois.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "illinois.edu"
       ],
@@ -219,6 +247,10 @@
       "shortName": "Purdue",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "purdue.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "purdue.edu"
       ],
@@ -249,6 +281,10 @@
       "shortName": "ASU",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "asu.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "asu.edu"
       ],
@@ -279,6 +315,10 @@
       "shortName": "Berea",
       "country": "USA",
       "region": "North America",
+      "officialDomains": [
+        "berea.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "berea.edu"
       ],
@@ -309,6 +349,10 @@
       "shortName": "SNU",
       "country": "South Korea",
       "region": "East Asia",
+      "officialDomains": [
+        "snu.ac.kr"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "snu.ac.kr"
       ],
@@ -339,6 +383,10 @@
       "shortName": "KAIST",
       "country": "South Korea",
       "region": "East Asia",
+      "officialDomains": [
+        "kaist.ac.kr"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "kaist.ac.kr"
       ],
@@ -369,6 +417,10 @@
       "shortName": "Yonsei UIC",
       "country": "South Korea",
       "region": "East Asia",
+      "officialDomains": [
+        "yonsei.ac.kr"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "yonsei.ac.kr"
       ],
@@ -399,6 +451,10 @@
       "shortName": "Korea University",
       "country": "South Korea",
       "region": "East Asia",
+      "officialDomains": [
+        "korea.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "korea.edu"
       ],
@@ -429,6 +485,10 @@
       "shortName": "POSTECH",
       "country": "South Korea",
       "region": "East Asia",
+      "officialDomains": [
+        "postech.ac.kr"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "postech.ac.kr"
       ],
@@ -459,6 +519,10 @@
       "shortName": "SKKU",
       "country": "South Korea",
       "region": "East Asia",
+      "officialDomains": [
+        "skku.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "skku.edu"
       ],
@@ -489,6 +553,10 @@
       "shortName": "HKU",
       "country": "Hong Kong",
       "region": "East Asia",
+      "officialDomains": [
+        "hku.hk"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "hku.hk"
       ],
@@ -519,6 +587,10 @@
       "shortName": "HKUST",
       "country": "Hong Kong",
       "region": "East Asia",
+      "officialDomains": [
+        "hkust.edu.hk"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "hkust.edu.hk"
       ],
@@ -549,6 +621,10 @@
       "shortName": "CUHK",
       "country": "Hong Kong",
       "region": "East Asia",
+      "officialDomains": [
+        "cuhk.edu.hk"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "cuhk.edu.hk"
       ],
@@ -579,6 +655,10 @@
       "shortName": "CityU HK",
       "country": "Hong Kong",
       "region": "East Asia",
+      "officialDomains": [
+        "cityu.edu.hk"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "cityu.edu.hk"
       ],
@@ -609,6 +689,10 @@
       "shortName": "NUS",
       "country": "Singapore",
       "region": "Southeast Asia",
+      "officialDomains": [
+        "nus.edu.sg"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "nus.edu.sg"
       ],
@@ -639,6 +723,10 @@
       "shortName": "NTU Singapore",
       "country": "Singapore",
       "region": "Southeast Asia",
+      "officialDomains": [
+        "ntu.edu.sg"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "ntu.edu.sg"
       ],
@@ -669,6 +757,10 @@
       "shortName": "UTokyo PEAK",
       "country": "Japan",
       "region": "East Asia",
+      "officialDomains": [
+        "u-tokyo.ac.jp"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "u-tokyo.ac.jp"
       ],
@@ -699,6 +791,10 @@
       "shortName": "TUM",
       "country": "Germany",
       "region": "Europe",
+      "officialDomains": [
+        "tum.de"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "tum.de"
       ],
@@ -729,6 +825,10 @@
       "shortName": "TU Delft",
       "country": "Netherlands",
       "region": "Europe",
+      "officialDomains": [
+        "tudelft.nl"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "tudelft.nl"
       ],
@@ -759,6 +859,10 @@
       "shortName": "UvA",
       "country": "Netherlands",
       "region": "Europe",
+      "officialDomains": [
+        "uva.nl"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "uva.nl"
       ],
@@ -789,6 +893,10 @@
       "shortName": "Bocconi",
       "country": "Italy",
       "region": "Europe",
+      "officialDomains": [
+        "unibocconi.it"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "unibocconi.it"
       ],
@@ -819,6 +927,10 @@
       "shortName": "CEU",
       "country": "Austria",
       "region": "Europe",
+      "officialDomains": [
+        "ceu.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "ceu.edu"
       ],
@@ -849,6 +961,10 @@
       "shortName": "Charles University",
       "country": "Czechia",
       "region": "Europe",
+      "officialDomains": [
+        "cuni.cz"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "cuni.cz"
       ],
@@ -879,6 +995,10 @@
       "shortName": "University of Warsaw",
       "country": "Poland",
       "region": "Europe",
+      "officialDomains": [
+        "uw.edu.pl"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "uw.edu.pl"
       ],
@@ -909,6 +1029,10 @@
       "shortName": "Bologna",
       "country": "Italy",
       "region": "Europe",
+      "officialDomains": [
+        "unibo.it"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "unibo.it"
       ],
@@ -939,6 +1063,10 @@
       "shortName": "Edinburgh",
       "country": "United Kingdom",
       "region": "Europe",
+      "officialDomains": [
+        "ed.ac.uk"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "ed.ac.uk"
       ],
@@ -969,6 +1097,10 @@
       "shortName": "Sciences Po",
       "country": "France",
       "region": "Europe",
+      "officialDomains": [
+        "sciencespo.fr"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "sciencespo.fr"
       ],
@@ -999,6 +1131,10 @@
       "shortName": "NYU Abu Dhabi",
       "country": "UAE",
       "region": "Middle East",
+      "officialDomains": [
+        "nyu.edu"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "nyu.edu"
       ],
@@ -1029,6 +1165,10 @@
       "shortName": "Nazarbayev University",
       "country": "Kazakhstan",
       "region": "Central Asia",
+      "officialDomains": [
+        "nu.edu.kz"
+      ],
+      "trustedSubdomains": [],
       "allowedDomains": [
         "nu.edu.kz"
       ],

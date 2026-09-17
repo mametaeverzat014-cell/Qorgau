@@ -15,6 +15,8 @@
     "check:links": "node scripts/check-links.mjs",
     "data:init": "node scripts/university-data/cli.mjs init-registry",
     "data:discover": "node scripts/university-data/cli.mjs discover",
+    "data:add-domain": "node scripts/university-data/cli.mjs add-domain",
+    "data:probe-urls": "node scripts/university-data/cli.mjs probe-urls",
     "data:ingest": "node scripts/university-data/cli.mjs ingest",
     "data:review": "node scripts/university-data/cli.mjs review",
     "data:approve": "node scripts/university-data/cli.mjs approve",
