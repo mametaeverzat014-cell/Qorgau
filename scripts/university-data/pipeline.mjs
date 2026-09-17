@@ -19,12 +19,12 @@ import { DATA_DIR, getEntry, PAGE_KINDS } from './registry.mjs';
 import { safeFetch, looksLikeChallenge, assertSafeId } from './safety.mjs';
 import { discoverPages, isNonContentUrl } from './discovery.mjs';
 import {
-  htmlToText, pageTitle, detectAcademicYear, moneyNear, extractIELTS, extractTOEFL,
-  extractTestingPolicy, extractAidPolicy, extractDeadlines, extractCommonDataSet,
+  htmlToText, pageTitle, detectAcademicYear, extractMoneyScoped, extractIELTS, extractTOEFL,
+  extractTestingPolicy, extractAidPolicy, extractDeadlines, extractCommonDataSet, mainContent,
 } from './extract.mjs';
 import {
   validateMoneyCandidate, validateIELTS, validateTOEFL, validateDeadline,
-  deriveAidFlags, validateRecordConsistency, verdictFor, VERDICT,
+  deriveAidFlags, validateRecordConsistency, verdictFor, EVIDENCE, VERDICT,
 } from './validate.mjs';
 
 const dirFor = (stage, id) => join(DATA_DIR, stage, assertSafeId(id));
@@ -146,6 +146,10 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
   const outDir = ensure(dirFor('extracted', id));
   const candidates = {};
   const notes = [];
+  /** Figures found and deliberately not used, so a reviewer can see them. */
+  const excludedFigures = [];
+  /** Fields the documents said nothing about. Not the same as "false". */
+  const noEvidence = [];
 
   const docs = manifest.documents.map((d) => {
     const raw = readFileSync(join(dirFor('raw', id), d.file));
@@ -159,7 +163,15 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
       continue;
     }
     doc.title = pageTitle(doc.html);
-    const text = htmlToText(doc.html);
+    // Extraction reads the page, not the template. Discovery has stripped
+    // chrome before classification since the template contamination was found;
+    // reading whole-page text here left the same navigation and footer able to
+    // supply a tuition figure, an IELTS band or a deadline. The raw HTML stays
+    // on disk untouched for provenance.
+    const main = mainContent(doc.html);
+    const mainHtml = main.html;
+    const text = htmlToText(mainHtml);
+    doc.contentCleaned = main.stripped || main.usedMain;
     const year = detectAcademicYear(text);
     const st = sourceTypeFor(doc);
 
@@ -171,7 +183,7 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
           candidates[field] ??= [];
           candidates[field].push({
             value: v.value, currency: v.currency ?? null, unit: 'per-year',
-            academicYear: cds.academicYear, excerpt: v.excerpt,
+            academicYear: cds.academicYear, academicYearSource: 'common-data-set', excerpt: v.excerpt,
             evidence: evidenceFrom(doc, 'common_data_set', { academicYear: cds.academicYear, excerpt: v.excerpt }),
             confidence: 0.95,
           });
@@ -180,14 +192,20 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
     }
 
     const pushMoney = (field, keywords) => {
-      for (const m of moneyNear(text, keywords)) {
+      // Scoped: each figure carries the academic year its own table column, row
+      // or section states, rather than the whole page's year or nothing.
+      const { kept, excluded } = extractMoneyScoped(mainHtml, keywords, { withExcluded: true });
+      for (const m of kept) {
         candidates[field] ??= [];
         candidates[field].push({
-          ...m, academicYear: year.year,
-          academicYearAmbiguous: year.ambiguous, academicYearCandidates: year.candidates,
-          evidence: evidenceFrom(doc, st, { academicYear: year.year, excerpt: m.excerpt }),
+          ...m,
+          academicYear: m.academicYear ?? null,
+          evidence: evidenceFrom(doc, st, { academicYear: m.academicYear ?? null, excerpt: m.excerpt }),
           confidence: m.isAnnual ? 0.85 : 0.5,
         });
+      }
+      for (const x of excluded) {
+        excludedFigures.push({ field, value: x.value, currency: x.currency, reason: x.excludedBecause, excerpt: x.excerpt, url: doc.url });
       }
     };
 
@@ -234,18 +252,35 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
     }
     if (doc.kind === 'financial_aid' || doc.kind === 'international_financial_aid' || doc.kind === 'scholarships') {
       const signals = extractAidPolicy(text);
-      const { flags, issues } = deriveAidFlags(signals);
-      candidates.aidFlags ??= [];
-      candidates.aidFlags.push({
-        flags, issues, evidence: evidenceFrom(doc, st, { excerpt: signals.meetsFullNeed.excerpt ?? signals.anyScholarship.excerpt }),
-        confidence: signals.internationalEligible.found ? 0.8 : 0.3,
-      });
+      const { flags, evidence, issues } = deriveAidFlags(signals);
+      // Only fields the page actually speaks to become candidates. A field the
+      // page is silent on is recorded as having no evidence, not as false.
+      const spoken = Object.entries(evidence).filter(([, e]) => e.state !== EVIDENCE.UNKNOWN);
+      for (const [field, e] of Object.entries(evidence)) {
+        if (e.state === EVIDENCE.UNKNOWN) {
+          noEvidence.push({ field, reason: e.reason, url: doc.url, kind: doc.kind });
+        }
+      }
+      if (spoken.length > 0) {
+        candidates.aidFlags ??= [];
+        candidates.aidFlags.push({
+          flags, evidence, issues,
+          supportedFields: spoken.map(([f]) => f),
+          evidenceExcerpt: signals.meetsFullNeed.excerpt ?? signals.competitiveAward.excerpt ?? signals.anyScholarship.excerpt,
+          evidenceRef: evidenceFrom(doc, st, { excerpt: signals.meetsFullNeed.excerpt ?? signals.competitiveAward.excerpt ?? signals.anyScholarship.excerpt }),
+          confidence: signals.internationalEligible.found ? 0.8 : 0.3,
+        });
+      }
     }
   }
 
-  const out = { id, extractedAt: new Date().toISOString(), candidates, notes };
+  const out = {
+    id, extractedAt: new Date().toISOString(), candidates, notes,
+    excludedFigures, noEvidence,
+    contentCleaned: docs.filter((d) => d.contentCleaned).length,
+  };
   writeFileSync(join(outDir, 'candidates.json'), JSON.stringify(out, null, 2) + '\n');
-  log(`  extracted ${Object.keys(candidates).length} field groups, ${notes.length} notes`);
+  log(`  extracted ${Object.keys(candidates).length} field groups, ${excludedFigures.length} figures excluded by context, ${noEvidence.length} fields with no evidence, ${notes.length} notes`);
   return out;
 }
 
@@ -258,6 +293,15 @@ export function validateCandidates(id, extracted, { log = console.log } = {}) {
   const outDir = ensure(dirFor('extracted', id));
   const proposals = {};
   const rejected = [];
+  /**
+   * Fields the sources said nothing about.
+   *
+   * Kept separate from REJECT on purpose. "We read the page and it does not
+   * state this" and "we read a value and it failed validation" are different
+   * answers, and collapsing them into one forces a reviewer into a binary
+   * choice about a field nobody has evidence for.
+   */
+  const noEvidence = [...(extracted.noEvidence ?? [])];
 
   const record = (field, value, evidence, issues, confidence) => {
     const v = verdictFor({ issues, hasEvidence: Boolean(evidence), confidence });
@@ -274,15 +318,24 @@ export function validateCandidates(id, extracted, { log = console.log } = {}) {
 
   const c = extracted.candidates;
 
-  for (const [field, keywords] of [['tuition'], ['livingCost'], ['totalCostOfAttendance']]) {
+  for (const [field] of [['tuition'], ['livingCost'], ['totalCostOfAttendance']]) {
     const list = c[field];
     if (!list?.length) continue;
-    // Prefer the strongest source, then an explicitly annual figure.
+    // Strongest source, then the most recent cycle the page attributes, then an
+    // explicitly annual figure.
     const best = [...list].sort(
       (a, b) => (b.evidence.sourceType === 'common_data_set' ? 1 : 0) - (a.evidence.sourceType === 'common_data_set' ? 1 : 0)
+        || String(b.academicYear ?? '').localeCompare(String(a.academicYear ?? ''))
         || (b.isAnnual ? 1 : 0) - (a.isAnnual ? 1 : 0) || (b.confidence ?? 0) - (a.confidence ?? 0),
     )[0];
-    record(field, best.value, best.evidence, validateMoneyCandidate(field, best), best.confidence);
+    const issues = validateMoneyCandidate(field, best);
+    if (best.academicYearSource) {
+      issues.push({
+        field, severity: 'info',
+        message: `academic year ${best.academicYear} taken from the ${best.academicYearSource.replace('-', ' ')}`,
+      });
+    }
+    record(field, best.value, best.evidence, issues, best.confidence);
   }
 
   if (c.minimumIELTS?.length) {
@@ -306,16 +359,17 @@ export function validateCandidates(id, extracted, { log = console.log } = {}) {
     const r = validateDeadline(field, c[field]);
     record(field, r.value, c[field][0].evidence, r.issues, 0.75);
   }
+
   if (c.aidFlags?.length) {
     const best = [...c.aidFlags].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0];
-    for (const [k, v] of Object.entries(best.flags)) {
-      if (k === 'aidCertainty') continue;
-      record(k, v, best.evidence, best.issues, best.confidence);
+    for (const [field, e] of Object.entries(best.evidence)) {
+      if (e.state === EVIDENCE.UNKNOWN) continue;   // already in noEvidence
+      // aidCertainty goes through the same gate as everything else. It used to
+      // be written straight into the proposals map, which is how an unsupported
+      // "competitive" reached review alongside a validator note saying the page
+      // established nothing.
+      record(field, e.value, best.evidenceRef, [...best.issues], best.confidence);
     }
-    proposals.aidCertainty = {
-      field: 'aidCertainty', value: best.flags.aidCertainty, verdict: VERDICT.REVIEW_REQUIRED,
-      confidence: best.confidence, evidence: [best.evidence], issues: best.issues, status: 'candidate',
-    };
   }
 
   const flat = Object.fromEntries(Object.entries(proposals).map(([k, p]) => [k, p.value]));
@@ -330,11 +384,19 @@ export function validateCandidates(id, extracted, { log = console.log } = {}) {
     }
   }
 
-  const out = { id, validatedAt: new Date().toISOString(), proposals, rejected, consistency };
+  // A field that is neither proposed nor rejected, and that a document was
+  // silent on, belongs in the no-evidence list rather than nowhere.
+  const accounted = new Set([...Object.keys(proposals), ...rejected.map((r) => r.field)]);
+  const unexplained = noEvidence.filter((n) => !accounted.has(n.field));
+
+  const out = {
+    id, validatedAt: new Date().toISOString(), proposals, rejected,
+    noEvidence: unexplained, excludedFigures: extracted.excludedFigures ?? [], consistency,
+  };
   writeFileSync(join(outDir, 'proposals.json'), JSON.stringify(out, null, 2) + '\n');
   const accepted = Object.values(proposals).filter((p) => p.verdict === VERDICT.ACCEPT).length;
   const review = Object.values(proposals).filter((p) => p.verdict === VERDICT.REVIEW_REQUIRED).length;
-  log(`  ${accepted} accepted, ${review} need review, ${rejected.length} rejected`);
+  log(`  ${accepted} accepted, ${review} need review, ${rejected.length} rejected, ${unexplained.length} with no evidence`);
   return out;
 }
 

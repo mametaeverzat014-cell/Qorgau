@@ -137,61 +137,113 @@ export function validateDeadline(field, candidates, cycle = { from: '2026-08-01'
  * AidCertainty model: unless a page explicitly extends aid to international
  * students, we do not record it as available to them.
  */
+export const EVIDENCE = {
+  /** The source positively states this. */
+  SUPPORTED: 'SUPPORTED',
+  /** The source positively states the opposite. */
+  CONTRADICTED: 'CONTRADICTED',
+  /** The source says nothing either way. Not the same as false. */
+  UNKNOWN: 'UNKNOWN',
+};
+
+const supported = (value, reason) => ({ state: EVIDENCE.SUPPORTED, value, reason });
+const contradicted = (value, reason) => ({ state: EVIDENCE.CONTRADICTED, value, reason });
+const unknown = (reason) => ({ state: EVIDENCE.UNKNOWN, value: null, reason });
+
+/**
+ * Turns aid-policy signals into three-state evidence.
+ *
+ * The rule this encodes is the one a live run broke: **absence of evidence is
+ * UNKNOWN, not false.** A generic financial-aid page that mentions scholarships
+ * and never mentions international students proposed downgrading a
+ * meets-full-need record to "competitive". Nothing on that page supported
+ * "competitive", and nothing on it contradicted "meets-full-need" either. The
+ * correct output is no proposal at all.
+ *
+ * `flags` carries plain values for convenience and is `null` wherever the state
+ * is UNKNOWN. `evidence` carries the state and the reason for every field, and
+ * is what the pipeline reads when deciding whether to propose a change.
+ */
 export function deriveAidFlags(signals) {
   const issues = [];
+  const evidence = {};
 
   if (signals.internationalExcluded.found) {
-    return {
-      flags: {
-        needBasedAidForInternationals: false,
-        meetsFullNeedForInternationals: false,
-        fullTuitionPossible: false,
-        fullRidePossible: false,
-        aidCertainty: 'minimal',
-      },
-      issues: [warn('aid', 'the page states this aid is not open to international students')],
-    };
+    // This is real evidence, in the negative direction.
+    const reason = 'the page states this aid is not open to international students';
+    Object.assign(evidence, {
+      needBasedAidForInternationals: contradicted(false, reason),
+      meetsFullNeedForInternationals: contradicted(false, reason),
+      fullTuitionPossible: contradicted(false, reason),
+      fullRidePossible: contradicted(false, reason),
+      aidCertainty: supported('minimal', reason),
+    });
+    return { flags: flatten(evidence), evidence, issues: [warn('aid', reason)] };
   }
 
   const intlStated = signals.internationalEligible.found;
   if (!intlStated) {
     issues.push(
-      err('aid', 'the page does not explicitly state that international students are eligible; aid availability cannot be inferred from generic wording'),
+      warn('aid', 'the page does not explicitly state that international students are eligible; nothing about international aid can be concluded from it either way'),
     );
   }
 
-  // "Meets demonstrated need" must be stated, never inferred from vague aid text.
-  const meetsFullNeed = signals.meetsFullNeed.found && intlStated;
-  // A full ride requires living costs to be named, not just tuition.
-  const fullRide = signals.fullRide.found && intlStated;
-  // Full tuition is implied by a full ride, otherwise it must be stated.
-  const fullTuition = (signals.fullTuition.found || fullRide) && intlStated;
+  const noIntl = 'the page never states whether international students are eligible, so this cannot be concluded from it';
+
+  evidence.meetsFullNeedForInternationals =
+    !intlStated ? unknown(noIntl)
+    : signals.meetsFullNeed.found
+      ? supported(true, 'the page states that full demonstrated need is met, and that international students are eligible')
+      : unknown('the page does not state that full demonstrated need is met; that is not evidence that it is not');
+
+  evidence.fullRidePossible =
+    !intlStated ? unknown(noIntl)
+    : signals.fullRide.found
+      ? supported(true, 'the page states an award covering tuition and living costs')
+      : unknown('the page does not describe an award covering living costs as well as tuition');
+
+  evidence.fullTuitionPossible =
+    !intlStated ? unknown(noIntl)
+    : signals.fullTuition.found || signals.fullRide.found
+      ? supported(true, 'the page states an award covering full tuition')
+      : unknown('the page does not describe an award covering full tuition');
+
+  evidence.needBasedAidForInternationals =
+    !intlStated ? unknown(noIntl)
+    : signals.meetsFullNeed.found || signals.needBlind.found
+      ? supported(true, 'the page states need-based aid and that international students are eligible')
+      : unknown('international students are eligible to apply, but the page does not state that the aid is need-based');
+
+  // aidCertainty is the field the live run got wrong, so its rules are explicit.
+  evidence.aidCertainty = (() => {
+    if (!intlStated) return unknown(noIntl);
+    if (signals.meetsFullNeed.found) {
+      return supported('meets-full-need', 'the page states that full demonstrated need is met and that international students are eligible');
+    }
+    if (signals.competitiveAward.found) {
+      return supported('competitive', `the page describes the award as a contest: "${(signals.competitiveAward.sentence ?? '').slice(0, 120)}"`);
+    }
+    // Scholarships existing says nothing about how dependable they are.
+    return unknown(
+      signals.anyScholarship.found
+        ? 'the page mentions scholarships but does not say whether they are competitive, limited or dependable'
+        : 'the page states nothing about how aid is awarded',
+    );
+  })();
 
   if (signals.anyScholarship.found && !signals.fullTuition.found && !signals.fullRide.found) {
-    issues.push(warn('aid', 'scholarships are mentioned but neither full tuition nor full cost is claimed; recorded as partial only'));
+    issues.push(warn('aid', 'scholarships are mentioned but neither full tuition nor full cost is claimed; nothing is concluded about their size'));
   }
   if (signals.fullTuition.found && !signals.fullRide.found) {
     issues.push(warn('aid', 'full tuition is claimed but living costs are not; these are different things and are recorded separately'));
   }
 
-  const aidCertainty = meetsFullNeed
-    ? 'meets-full-need'
-    : fullRide || fullTuition
-      ? 'competitive'
-      : signals.meritExists.found || signals.anyScholarship.found
-        ? 'competitive'
-        : 'minimal';
+  return { flags: flatten(evidence), evidence, issues };
+}
 
-  return {
-    flags: {
-      needBasedAidForInternationals: intlStated && (signals.meetsFullNeed.found || signals.needBlind.found),
-      meetsFullNeedForInternationals: meetsFullNeed,
-      fullTuitionPossible: fullTuition,
-      fullRidePossible: fullRide,
-      aidCertainty,
-    },
-    issues,
-  };
+/** Plain values, null wherever the evidence is UNKNOWN. */
+function flatten(evidence) {
+  return Object.fromEntries(Object.entries(evidence).map(([k, e]) => [k, e.state === EVIDENCE.UNKNOWN ? null : e.value]));
 }
 
 /* ------------------------------------------------------------------ */
@@ -236,6 +288,14 @@ export const VERDICT = {
   ACCEPT: 'ACCEPT',
   REVIEW_REQUIRED: 'REVIEW_REQUIRED',
   REJECT: 'REJECT',
+  /**
+   * The sources were read and say nothing about this field.
+   *
+   * Deliberately not REJECT. A rejected candidate is a value that failed
+   * validation; this is the absence of a value, and presenting the two the same
+   * way pushes a reviewer into a decision nobody has evidence for.
+   */
+  NO_EVIDENCE: 'NO_EVIDENCE',
 };
 
 /**
@@ -246,6 +306,7 @@ export const VERDICT = {
  * Evidence and a clean validation run are both required.
  */
 export function verdictFor({ issues, hasEvidence, confidence = 0 }) {
+  // `info` issues are provenance notes, not problems; they never change a verdict.
   const errors = issues.filter((i) => i.severity === 'error');
   if (errors.length > 0) return { verdict: VERDICT.REJECT, errors, reason: errors[0].message };
   if (!hasEvidence) return { verdict: VERDICT.REJECT, errors, reason: 'no source evidence attached' };

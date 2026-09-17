@@ -12,7 +12,7 @@ import {
 } from '../scripts/university-data/extract.mjs';
 import {
   deriveAidFlags, validateDeadline, validateIELTS, validateMoneyCandidate,
-  validateRecordConsistency, verdictFor, VERDICT,
+  validateRecordConsistency, verdictFor, EVIDENCE, VERDICT,
 } from '../scripts/university-data/validate.mjs';
 import { hostMatchesDomain, isAllowedUrl, looksLikeChallenge, assertSafeId } from '../scripts/university-data/safety.mjs';
 import { rootDomainOf, readCuratedUniversities } from '../scripts/university-data/registry.mjs';
@@ -315,47 +315,60 @@ describe('Aid policy never over-claims', () => {
   const base = {
     meetsFullNeed: { found: false }, needBlind: { found: false }, needAware: { found: false },
     fullRide: { found: false }, fullTuition: { found: false }, meritExists: { found: false },
-    anyScholarship: { found: false }, internationalEligible: { found: true }, internationalExcluded: { found: false },
+    anyScholarship: { found: false }, competitiveAward: { found: false },
+    internationalEligible: { found: true }, internationalExcluded: { found: false },
   };
 
-  it('does not turn "scholarships exist" into a full ride', () => {
-    const { flags } = deriveAidFlags({ ...base, anyScholarship: { found: true }, meritExists: { found: true } });
-    expect(flags.fullRidePossible).toBe(false);
-    expect(flags.fullTuitionPossible).toBe(false);
-    expect(flags.aidCertainty).toBe('competitive');
+  it('does not turn "scholarships exist" into a full ride, or into anything else', () => {
+    // Updated from an earlier expectation of `false` / 'competitive'. A page
+    // that mentions scholarships says nothing about their size or how they are
+    // awarded, so the honest output is UNKNOWN in both directions.
+    const { flags, evidence } = deriveAidFlags({ ...base, anyScholarship: { found: true }, meritExists: { found: true } });
+    expect(flags.fullRidePossible).toBeNull();
+    expect(flags.fullTuitionPossible).toBeNull();
+    expect(flags.aidCertainty).toBeNull();
+    expect(evidence.aidCertainty.state).toBe(EVIDENCE.UNKNOWN);
+    expect(evidence.aidCertainty.reason).toMatch(/does not say whether they are competitive/);
   });
 
   it('does not turn full tuition into a full ride', () => {
-    const { flags } = deriveAidFlags({ ...base, fullTuition: { found: true } });
+    const { flags, evidence } = deriveAidFlags({ ...base, fullTuition: { found: true } });
     expect(flags.fullTuitionPossible).toBe(true);
-    expect(flags.fullRidePossible).toBe(false);
+    expect(flags.fullRidePossible).toBeNull();
+    expect(evidence.fullRidePossible.state).toBe(EVIDENCE.UNKNOWN);
   });
 
   it('treats a competitive award as different from dependable aid', () => {
-    const competitive = deriveAidFlags({ ...base, fullTuition: { found: true } }).flags;
-    const dependable = deriveAidFlags({ ...base, meetsFullNeed: { found: true } }).flags;
-    expect(competitive.aidCertainty).toBe('competitive');
-    expect(dependable.aidCertainty).toBe('meets-full-need');
-    expect(competitive.meetsFullNeedForInternationals).toBe(false);
-    expect(dependable.meetsFullNeedForInternationals).toBe(true);
+    const competitive = deriveAidFlags({ ...base, competitiveAward: { found: true, sentence: 'Scholarships are highly competitive.' } });
+    const dependable = deriveAidFlags({ ...base, meetsFullNeed: { found: true } });
+    expect(competitive.flags.aidCertainty).toBe('competitive');
+    expect(dependable.flags.aidCertainty).toBe('meets-full-need');
+    // Not knowing whether full need is met is not the same as knowing it is not.
+    expect(competitive.flags.meetsFullNeedForInternationals).toBeNull();
+    expect(dependable.flags.meetsFullNeedForInternationals).toBe(true);
   });
 
   it('records domestic-only aid as unavailable to internationals', () => {
-    const { flags } = deriveAidFlags({
+    const { flags, evidence } = deriveAidFlags({
       ...base, fullRide: { found: true }, meetsFullNeed: { found: true },
       internationalExcluded: { found: true },
     });
     expect(flags.fullRidePossible).toBe(false);
     expect(flags.needBasedAidForInternationals).toBe(false);
     expect(flags.aidCertainty).toBe('minimal');
+    // This is evidence, not absence of it.
+    expect(evidence.fullRidePossible.state).toBe(EVIDENCE.CONTRADICTED);
   });
 
   it('will not infer international eligibility from generic aid wording', () => {
-    const { flags, issues } = deriveAidFlags({
+    const { flags, evidence, issues } = deriveAidFlags({
       ...base, meetsFullNeed: { found: true }, internationalEligible: { found: false },
     });
-    expect(flags.meetsFullNeedForInternationals).toBe(false);
-    expect(issues.some((i) => i.severity === 'error')).toBe(true);
+    // Updated from an earlier expectation of `false`: the page states full need
+    // is met and says nothing about who is eligible. Neither true nor false.
+    expect(flags.meetsFullNeedForInternationals).toBeNull();
+    expect(evidence.meetsFullNeedForInternationals.state).toBe(EVIDENCE.UNKNOWN);
+    expect(issues.some((i) => /does not explicitly state that international students are eligible/.test(i.message))).toBe(true);
   });
 });
 

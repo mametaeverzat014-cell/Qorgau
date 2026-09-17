@@ -418,6 +418,100 @@ domain" are different problems.
 
 ---
 
+---
+
+## Extraction
+
+Discovery decides which page to read. Extraction decides what the page says, and
+a live ingest surfaced four faults in it.
+
+### Extraction reads the page, not the template
+
+`mainContent()` — the same function discovery uses, not a second implementation —
+now runs before extraction too. Site navigation and footers routinely carry a
+figure, a scholarship claim, an IELTS band and a deadline on every page of a
+site; reading whole-page text let any of them become a candidate for any page.
+The raw HTML stays on disk untouched, so provenance and debugging are unaffected.
+
+### Year-aware money
+
+A live run refused a whole cost-of-attendance page because it listed 2024-25,
+2025-26 and 2026-27. Refusing was right — picking the nearest year in flattened
+text is guessing — but the page's own table says which column is which year.
+
+A figure now inherits a year only where the relationship is structural:
+
+| source | meaning |
+| --- | --- |
+| `table-column` | the column header for this cell names a year |
+| `table-row` | the row itself names exactly one year |
+| `section` | the enclosing heading section names exactly one year |
+| `page` | the whole page names exactly one year |
+
+Anything else stays ambiguous and is refused as before, and the source of the
+attribution is recorded on the proposal so a reviewer can check it. Nearest year
+in flattened prose is never used.
+
+Each candidate carries value, currency, unit, academic year, the year's source,
+the excerpt and the source URL. Where several cycles are present, the most recent
+attributable one is proposed.
+
+### A number is not a price
+
+A live run extracted $200,000 as tuition, from a sentence saying families with
+income below that threshold attend tuition-free. The sentence contains the word
+"tuition", so no keyword filter can catch it. Figures are now excluded when their
+sentence is about income, assets, earnings, an award maximum or an eligibility
+threshold — and the exclusions are **reported**, with the reason, rather than
+silently dropped.
+
+Within a sentence that prices several things, a figure belongs to the cost
+component named nearest to it, so "tuition is $59,750 and housing is $12,500"
+does not make $12,500 a tuition candidate. Totals are exempt from that rule,
+because a cost of attendance legitimately enumerates its own components.
+
+The plausibility ceiling remains as a second defence.
+
+### Aid certainty is a three-state machine
+
+The worst failure of the live run: a generic aid page that established nothing
+about international eligibility proposed downgrading a `meets-full-need` record
+to `competitive`, while the validator simultaneously reported that the page
+established nothing. Both halves were wrong together.
+
+Every aid field now carries `SUPPORTED`, `CONTRADICTED` or `UNKNOWN`. **Absence
+of evidence is UNKNOWN, not false**, and an UNKNOWN field produces no proposal
+at all.
+
+| field | proposed only when |
+| --- | --- |
+| `aidCertainty: meets-full-need` | the page states full demonstrated need is met **and** that international students are eligible |
+| `aidCertainty: competitive` | the page positively describes the award as a contest — "competitive", "selective", "a limited number", "not guaranteed" — in a sentence about aid |
+| `aidCertainty: minimal` | the page states international students are excluded |
+| `needBasedAidForInternationals`, `meetsFullNeedForInternationals`, `fullTuitionPossible`, `fullRidePossible` | the page states it, and states international applicability |
+
+Mentioning scholarships is not evidence that aid is competitive. Failing to find
+international eligibility is not evidence of anything. Not finding full-need
+wording is not evidence against full need. In all of those cases the field
+appears under **NO EVIDENCE** with the reason, the existing value stands, and
+nothing is proposed.
+
+### Four outcomes, not three
+
+| outcome | meaning |
+| --- | --- |
+| `ACCEPT` | a value with evidence that passed validation cleanly |
+| `REVIEW REQUIRED` | a value with evidence, carrying a warning or below the confidence threshold |
+| `REJECT` | a value was extracted and failed validation |
+| `NO EVIDENCE` | the sources were read and say nothing about this field |
+
+The last one is the point. A field nobody has evidence for should not appear as a
+changed candidate simply to force a binary choice, and "we read the page and it
+does not say" is a different answer from "we read a value and refused it".
+`review` also lists **figures found and not used**, with the reason.
+
+---
+
 ## Commands
 
 ```bash
@@ -518,7 +612,7 @@ Consequently:
   does not propose a replacement from memory and does not edit the dataset. A
   variant that responds is a lead, not a confirmation.
 
-What is proven: 148 tests exercise discovery, extraction, validation, the security
+What is proven: 176 tests exercise discovery, extraction, validation, the security
 gate and the approval gate, including an end-to-end fixture run from HTML through to a
 verdict. Twelve red-team scenarios — monthly housing, mixed academic years,
 domestic-only scholarships, stale SAT policy text, old PDFs, aggregator domains,
@@ -531,15 +625,10 @@ access. Nothing else is required.
 
 ### Known limitations
 
-1. **Extraction still reads whole-page text.** Chrome stripping is applied
-   during discovery, where it decides which page wins. The extractors that read
-   money, IELTS bands and deadlines out of a fetched page have not been switched
-   over to `mainContent()` yet, because extraction was explicitly out of scope
-   for this round. That is the next change to make.
-2. **PDFs are fetched but not parsed.** No text layer and no OCR ship with this
+1. **PDFs are fetched but not parsed.** No text layer and no OCR ship with this
    pipeline, because a half-working PDF parser produces confident-looking
    garbage. PDFs are flagged for manual reading instead.
-3. **The ranking layer has not been run against a live site.** Discovery itself
+2. **The ranking layer has not been run against a live site.** Discovery itself
    has: a live MIT run found 11/12 kinds in 58 requests with no sitemap treated
    as evidence. The source-selection rules that replace those false positives
    are exercised only against fixtures — a sitemap index, four child sitemaps,
@@ -548,12 +637,12 @@ access. Nothing else is required.
    blog host whose name contains the institution's acronym. Fixtures are not
    the internet. From this environment every request to a university domain
    returns HTTP 403 at the egress proxy, so the next live run is the real test.
-4. **Each institution starts with one allowed domain.** Real institutions spread
+3. **Each institution starts with one allowed domain.** Real institutions spread
    admissions, the registrar, student financial services and institutional
    research across several. Until a person approves the others with
    `data:add-domain`, discovery cannot see them — which is a deliberate
    trade: a narrow allow-list finds less and invents nothing.
-5. **No LLM extraction layer.** The optional-LLM design in the brief is
+4. **No LLM extraction layer.** The optional-LLM design in the brief is
    deliberately not implemented: every field the engine scores on can be parsed
    deterministically, and adding a model would introduce a candidate source that
    cannot be audited for no accuracy gain.

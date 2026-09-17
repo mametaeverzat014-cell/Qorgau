@@ -295,10 +295,204 @@ export function extractMoney(text) {
   return out;
 }
 
-/** Narrows money candidates to those whose context mentions a given concept. */
-export function moneyNear(text, keywords) {
+/**
+ * Wording that means a figure is about something other than what a student pays.
+ *
+ * A live run extracted $200,000 as MIT's tuition, from a sentence about families
+ * with income below that threshold being able to attend tuition-free. The
+ * sentence contains the word "tuition", so a keyword filter cannot catch it.
+ * Validation refused the figure on its ceiling, but a number should not reach
+ * validation as a tuition candidate at all.
+ */
+const NON_COST_CONTEXT = [
+  { re: /\b(family|household|parental|annual|combined)\s+income\b/i, reason: 'a family income figure, not a price' },
+  { re: /\bincome\s+(below|under|less than|above|over|of|threshold|cap|limit)\b/i, reason: 'an income threshold, not a price' },
+  { re: /\bincomes?\s+(are|is)?\s*(below|under|less than)\b/i, reason: 'an income threshold, not a price' },
+  { re: /\b(assets?|net worth|savings|investments?)\b/i, reason: 'an assets figure, not a price' },
+  { re: /\b(salary|salaries|wages?|earnings?|earns?|median pay|starting pay)\b/i, reason: 'an earnings figure, not a price' },
+  { re: /\b(scholarships?|awards?|grants?|bursaries)\b[^.\n]{0,40}\b(up to|maximum|worth|of)\b/i, reason: 'a maximum award value, not a price' },
+  { re: /\bup to\b[^.\n]{0,30}\b(scholarship|award|grant|bursary)\b/i, reason: 'a maximum award value, not a price' },
+  { re: /\b(eligib\w+|qualif\w+)\b[^.\n]{0,40}\b(if|when|for)\b[^.\n]{0,40}\b(income|earn|below|under)\b/i, reason: 'an aid eligibility threshold, not a price' },
+  { re: /\b(endowment|raised|donation|gift|pledge|budget of the (university|institute|college))\b/i, reason: 'an institutional finance figure, not a student cost' },
+  { re: /\b(loan|debt)\s+(forgiveness|cap|limit|average)\b/i, reason: 'a borrowing figure, not a price' },
+];
+
+/** Why a monetary figure cannot be a price, or null when nothing rules it out. */
+export function nonCostContext(sentence) {
+  return NON_COST_CONTEXT.find((p) => p.re.test(sentence ?? ''))?.reason ?? null;
+}
+
+/**
+ * Narrows money candidates to those whose context mentions a given concept.
+ *
+ * Returns the excluded figures too, with the reason, because "we found a number
+ * and deliberately did not use it" is a thing a reviewer needs to see.
+ */
+export function moneyNear(text, keywords, { withExcluded = false } = {}) {
   const re = new RegExp(`\\b(${keywords.join('|')})\\b`, 'i');
-  return extractMoney(text).filter((m) => re.test(m.sentence ?? m.excerpt));
+  const matched = extractMoney(text).filter((m) => re.test(m.sentence ?? m.excerpt));
+  const kept = [];
+  const excluded = [];
+  for (const m of matched) {
+    const reason = nonCostContext(m.sentence ?? m.excerpt);
+    if (reason) excluded.push({ ...m, excludedBecause: reason });
+    else kept.push(m);
+  }
+  return withExcluded ? { kept, excluded } : kept;
+}
+
+/* ------------------------------------------------------------------ */
+/* Year-aware money extraction                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Attributes each monetary figure to an academic year using page structure.
+ *
+ * A live run refused an entire cost-of-attendance page because it listed
+ * 2024-25, 2025-26 and 2026-27. That was the right answer given flattened text —
+ * picking the nearest year in a soup of prose is guessing — but it throws away a
+ * page whose own table says, unambiguously, which column is which year.
+ *
+ * So a figure inherits a year only where the relationship is structural:
+ *
+ *   table-column  the column header for this cell names a year
+ *   table-row     the row itself names exactly one year
+ *   section       the enclosing heading section names exactly one year
+ *   page          the whole page names exactly one year
+ *
+ * Anything else stays ambiguous and is refused downstream, as before. Nearest
+ * year in flattened text is never used.
+ *
+ * `html` should already be narrowed to main content by the caller.
+ */
+/**
+ * Every cost component a page might price, so one can be told from another.
+ *
+ * Used to decide which concept a figure belongs to when a single sentence
+ * prices several: "Tuition is $59,750 per year and housing is $12,500 per year"
+ * must not yield $12,500 as tuition.
+ */
+const COST_CONCEPTS = [
+  'tuition', 'fees', 'fee', 'housing', 'room and board', 'board', 'accommodation',
+  'residence', 'living', 'food', 'meals', 'meal plan', 'books', 'supplies',
+  'transportation', 'travel', 'insurance', 'personal expenses', 'total',
+  'cost of attendance', 'estimated cost', 'deposit',
+];
+
+/** Totals, which legitimately enumerate the components they are made of. */
+const AGGREGATE_CONCEPTS = ['total', 'total cost', 'cost of attendance', 'estimated cost', 'overall cost'];
+
+/** Distance from `index` to the nearest match of any of `terms`, or Infinity. */
+function nearestTermDistance(text, index, terms) {
+  let best = Infinity;
+  for (const t of terms) {
+    const re = new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    for (const m of text.matchAll(re)) {
+      best = Math.min(best, Math.abs(m.index - index));
+    }
+  }
+  return best;
+}
+
+export function extractMoneyScoped(html, keywords, { withExcluded = false } = {}) {
+  const kept = [];
+  const excluded = [];
+  const keywordRe = new RegExp(`\\b(${keywords.join('|')})\\b`, 'i');
+  const pageYear = detectAcademicYear(htmlToText(html));
+
+  // An aggregate figure names its own components — "the cost of attendance,
+  // including tuition, housing and personal expenses, is $71,900" — so for a
+  // total, the components are not competitors. Only another aggregate is.
+  const wanted = keywords.map((k) => k.toLowerCase());
+  const isAggregate = wanted.some((k) => AGGREGATE_CONCEPTS.includes(k));
+  const others = (isAggregate ? AGGREGATE_CONCEPTS : COST_CONCEPTS).filter((t) => !wanted.includes(t));
+
+  const push = (candidate, context) => {
+    if (!keywordRe.test(context)) return;
+    const reason = nonCostContext(candidate.sentence ?? candidate.excerpt);
+    if (reason) { excluded.push({ ...candidate, excludedBecause: reason }); return; }
+    kept.push(candidate);
+  };
+
+  /**
+   * As `push`, but for prose, where one sentence can price several things.
+   *
+   * The figure belongs to whichever cost concept is nearest to it. Without this
+   * the housing figure in "Tuition is $59,750 and housing is $12,500" is a
+   * tuition candidate, because the sentence contains the word "tuition".
+   */
+  const pushNearest = (candidate, scopeText) => {
+    const mine = nearestTermDistance(scopeText, candidate.index, keywords);
+    if (!Number.isFinite(mine)) return;
+    const theirs = nearestTermDistance(scopeText, candidate.index, others);
+    if (theirs < mine) {
+      excluded.push({ ...candidate, excludedBecause: 'a different cost component is named closer to this figure' });
+      return;
+    }
+    const reason = nonCostContext(candidate.sentence ?? candidate.excerpt);
+    if (reason) { excluded.push({ ...candidate, excludedBecause: reason }); return; }
+    kept.push(candidate);
+  };
+
+  /** Falls back through the scopes a figure can inherit a year from. */
+  const attribute = (candidate, scopeYear, scopeSource) => {
+    if (scopeYear?.year && !scopeYear.ambiguous) {
+      return { ...candidate, academicYear: scopeYear.year, academicYearSource: scopeSource, academicYearAmbiguous: false, academicYearCandidates: scopeYear.candidates };
+    }
+    if (scopeYear?.ambiguous) {
+      return { ...candidate, academicYear: null, academicYearSource: null, academicYearAmbiguous: true, academicYearCandidates: scopeYear.candidates };
+    }
+    if (pageYear.year && !pageYear.ambiguous) {
+      return { ...candidate, academicYear: pageYear.year, academicYearSource: 'page', academicYearAmbiguous: false, academicYearCandidates: pageYear.candidates };
+    }
+    return {
+      ...candidate, academicYear: null, academicYearSource: null,
+      academicYearAmbiguous: pageYear.ambiguous, academicYearCandidates: pageYear.candidates,
+    };
+  };
+
+  /* ---- tables: the only place a column can carry a year ---- */
+  for (const rows of tables(html)) {
+    if (rows.length === 0) continue;
+    // The header row is the first row that names an academic year in any cell.
+    const headerIndex = rows.findIndex((row) => row.some((cell) => detectAcademicYear(cell).year));
+    const header = headerIndex === -1 ? [] : rows[headerIndex];
+    const columnYear = header.map((cell) => detectAcademicYear(cell));
+
+    rows.forEach((row, rowIndex) => {
+      if (rowIndex === headerIndex) return;
+      const label = row[0] ?? '';
+      const rowYear = detectAcademicYear(row.join(' '));
+
+      row.forEach((cell, columnIndex) => {
+        const columnLabel = header[columnIndex] ?? '';
+        // Unit wording lives in the label or the column header as often as in
+        // the cell, so all three form the sentence a qualifier is read from.
+        const sentence = `${label} ${columnLabel} ${cell}`.replace(/\s+/g, ' ').trim();
+        for (const money of extractMoney(cell)) {
+          const scoped = { ...money, sentence, excerpt: `${label} | ${columnLabel} | ${cell}`.trim(), scope: 'table' };
+          const withYear =
+            columnYear[columnIndex]?.year && !columnYear[columnIndex].ambiguous
+              ? attribute(scoped, columnYear[columnIndex], 'table-column')
+              : attribute(scoped, rowYear, 'table-row');
+          push(withYear, `${label} ${columnLabel}`);
+        }
+      });
+    });
+  }
+
+  /* ---- prose: heading sections, tables already handled above ---- */
+  const withoutTables = html.replace(/<table[\s\S]*?<\/table>/gi, ' ');
+  for (const section of headingSections(withoutTables)) {
+    const sectionText = `${section.heading}\n${section.body}`;
+    const sectionYear = detectAcademicYear(sectionText);
+    for (const money of extractMoney(sectionText)) {
+      const scoped = { ...money, scope: 'section', sectionHeading: section.heading || null };
+      pushNearest(attribute(scoped, sectionYear, 'section'), sectionText);
+    }
+  }
+
+  return withExcluded ? { kept, excluded } : kept;
 }
 
 /* ------------------------------------------------------------------ */
@@ -398,6 +592,30 @@ export function extractAidPolicy(text) {
   const meritExists = near(/\bmerit[- ](based )?(scholarship|award)\b/i);
   const anyScholarship = near(/\bscholarship(s)?\b/i);
 
+  /**
+   * Wording that positively describes an award as a contest.
+   *
+   * Required before anything may be called "competitive". A live run proposed
+   * downgrading a meets-full-need record to "competitive" from a page that said
+   * nothing of the sort — it simply mentioned scholarships. Mentioning
+   * scholarships is not evidence that aid is competitive; it is not evidence of
+   * anything about how they are awarded.
+   */
+  const AID_CONTEXT = /\b(scholarship|scholarships|award|awards|aid|funding|bursary|bursaries|grant|grants)\b/i;
+  const nearInAidContext = (re) => {
+    for (const m of text.matchAll(new RegExp(re.source, `${re.flags.replace('g', '')}g`))) {
+      const sentence = sentenceAround(text, m.index, m[0].length);
+      if (AID_CONTEXT.test(sentence)) {
+        return { found: true, excerpt: excerptAround(text, m.index, m[0].length, 200), index: m.index, sentence };
+      }
+    }
+    return { found: false };
+  };
+
+  const competitiveAward = nearInAidContext(
+    /\b(competitive|highly competitive|selective|highly selective|limited number|a (small|select|limited) number|limited funds?|limited funding|not guaranteed|subject to availability)\b/i,
+  );
+
   // International eligibility must be stated, never inferred from generic aid text.
   const intlEligible = near(/\b(international|non-?(US|U\.S\.|domestic|EU|EEA|local))\s+(students?|applicants?|citizens?)\b[^.\n]{0,120}\b(are )?(eligible|considered|may apply|can apply|qualify)\b/i);
   const intlExcluded = near(/\b(only|restricted to|limited to)\s+(domestic|home|US|U\.S\.|EU|EEA|local|citizens?|permanent residents?)\b|\bnot available to international\b|\binternational students are not eligible\b/i);
@@ -410,6 +628,7 @@ export function extractAidPolicy(text) {
     fullTuition,
     meritExists,
     anyScholarship,
+    competitiveAward,
     internationalEligible: intlEligible,
     internationalExcluded: intlExcluded,
   };

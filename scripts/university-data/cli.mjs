@@ -405,6 +405,7 @@ function cmdReview() {
 
   const entries = Object.values(proposals.proposals);
   if (entries.length === 0) console.log(c.dim('  no proposals'));
+  else console.log(c.b('PROPOSED CHANGES\n'));
 
   for (const p of entries) {
     const current = currentValueFor(id, p.field);
@@ -434,10 +435,37 @@ function cmdReview() {
   }
 
   if (proposals.rejected?.length) {
-    console.log(c.b('REJECTED CANDIDATES'));
+    console.log(c.b('REJECTED — a value was extracted and failed validation'));
     for (const r of proposals.rejected) console.log(`  ${c.r('✗')} ${r.field}: ${r.reason}`);
     console.log('');
   }
+
+  if (proposals.noEvidence?.length) {
+    console.log(c.b('NO EVIDENCE — the sources were read and say nothing about these'));
+    console.log(c.dim('  These are not proposals. Nothing changes, and the existing value stands.'));
+    for (const n of proposals.noEvidence) {
+      console.log(`  ${c.dim('·')} ${n.field}`);
+      console.log(c.dim(`      ${n.reason}`));
+      if (n.url) console.log(c.dim(`      read: ${n.url}`));
+    }
+    console.log('');
+  }
+
+  if (proposals.excludedFigures?.length) {
+    console.log(c.b('FIGURES FOUND AND NOT USED'));
+    console.log(c.dim('  Monetary amounts on the page that are not what a student pays.'));
+    for (const f of proposals.excludedFigures) {
+      console.log(`  ${c.dim('·')} ${f.value}${f.currency ? ` ${f.currency}` : ''} not used as ${f.field}: ${f.reason}`);
+      if (f.excerpt) console.log(c.dim(`      "${f.excerpt.slice(0, 140)}"`));
+    }
+    console.log('');
+  }
+
+  console.log(c.b('SUMMARY'));
+  console.log(`  ${c.g(String(entries.filter((p) => p.verdict === VERDICT.ACCEPT).length))} accept`
+    + `  ·  ${c.y(String(entries.filter((p) => p.verdict === VERDICT.REVIEW_REQUIRED).length))} review required`
+    + `  ·  ${c.r(String(proposals.rejected?.length ?? 0))} rejected`
+    + `  ·  ${c.dim(String(proposals.noEvidence?.length ?? 0))} no evidence\n`);
 
   const approvable = entries.filter((p) => p.evidence?.length > 0);
   console.log(c.b('To approve the fields above, with evidence:'));

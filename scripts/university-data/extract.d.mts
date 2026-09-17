@@ -12,6 +12,11 @@ export interface MoneyCandidate {
   academicYear?: string | null;
   academicYearAmbiguous?: boolean;
   academicYearCandidates?: string[];
+  /** Which piece of page structure the year came from, if any. */
+  academicYearSource?: 'table-column' | 'table-row' | 'section' | 'page' | 'common-data-set' | null;
+  scope?: 'table' | 'section';
+  sectionHeading?: string | null;
+  excludedBecause?: string;
 }
 
 export interface IeltsCandidate {
@@ -48,6 +53,8 @@ export interface AidSignals {
   fullTuition: AidSignal;
   meritExists: AidSignal;
   anyScholarship: AidSignal;
+  /** Wording that positively describes an award as a contest. */
+  competitiveAward: AidSignal & { sentence?: string };
   internationalEligible: AidSignal;
   internationalExcluded: AidSignal;
 }
@@ -86,3 +93,15 @@ export function extractCommonDataSet(text: string): CommonDataSetResult;
 
 export function mainContent(html: string | null): { html: string; usedMain: boolean; stripped: boolean };
 export function headingSections(html: string | null): Array<{ heading: string; body: string }>;
+
+export function nonCostContext(sentence: string | null | undefined): string | null;
+
+export function extractMoneyScoped(
+  html: string,
+  keywords: string[],
+): MoneyCandidate[];
+export function extractMoneyScoped(
+  html: string,
+  keywords: string[],
+  opts: { withExcluded: true },
+): { kept: MoneyCandidate[]; excluded: MoneyCandidate[] };

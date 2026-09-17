@@ -37,11 +37,31 @@ export function fetchPages(
   opts?: { log?: (line: string) => void },
 ): Promise<FetchManifest>;
 
+export interface ExcludedFigure {
+  field: string;
+  value: number;
+  currency: string | null;
+  reason: string;
+  excerpt?: string;
+  url?: string;
+}
+export interface MissingEvidence {
+  field: string;
+  reason: string;
+  url?: string;
+  kind?: string;
+}
 export interface ExtractionResult {
   id: string;
   extractedAt: string;
   candidates: Record<string, unknown[]>;
   notes: string[];
+  /** Monetary figures found on the page and deliberately not used. */
+  excludedFigures: ExcludedFigure[];
+  /** Fields the documents were silent on. Not the same as false. */
+  noEvidence: MissingEvidence[];
+  /** How many documents had site chrome stripped before extraction. */
+  contentCleaned: number;
 }
 export function extractFrom(
   id: string,
@@ -54,7 +74,15 @@ export interface Proposal {
   value: unknown;
   verdict: string;
   confidence: number | null;
-  evidence: unknown[];
+  evidence: Array<{
+    url: string;
+    title?: string;
+    retrievedAt: string;
+    sourceType: string;
+    contentHash?: string;
+    academicYear?: string | null;
+    excerpt?: string;
+  }>;
   issues: Array<{ field: string; severity: string; message: string }>;
   status: string;
 }
@@ -63,6 +91,9 @@ export interface ValidationResult {
   validatedAt: string;
   proposals: Record<string, Proposal>;
   rejected: Array<{ field: string; reason: string; issues: unknown[] }>;
+  /** Fields no source spoke to. Distinct from a rejected candidate. */
+  noEvidence: MissingEvidence[];
+  excludedFigures: ExcludedFigure[];
   consistency: unknown[];
 }
 export function validateCandidates(
