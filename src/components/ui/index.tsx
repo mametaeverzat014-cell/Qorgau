@@ -54,6 +54,17 @@ export function Button({
   const cls = `inline-flex items-center justify-center rounded-[10px] font-medium transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap ${VARIANT[variant]} ${SIZE[size]} ${className}`;
 
   if (href && !disabled) {
+    // An external link must open in a new tab. Otherwise clicking "Official site"
+    // navigates the student out of AdmitPath entirely and they lose their place
+    // mid-journey — which is exactly what happens to a judge running the demo.
+    const isExternal = /^https?:\/\//.test(href);
+    if (isExternal) {
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className={cls} title={title} {...rest}>
+          {children}
+        </a>
+      );
+    }
     return (
       <Link href={href} className={cls} title={title} {...rest}>
         {children}

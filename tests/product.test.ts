@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { UNIVERSITIES } from '@/data/universities';
 import { DEMO_PROFILES, EMPTY_PROFILE, getDemoProfile } from '@/lib/demo';
 import { buildDiagnostics } from '@/lib/engine/diagnostics';
 import { buildComparison } from '@/lib/engine/compare';
@@ -292,4 +293,61 @@ describe('The engine never crashes on degenerate input', () => {
       }
     });
   }
+});
+
+/* ------------------------------------------------------------------ */
+/* Source links                                                        */
+/* ------------------------------------------------------------------ */
+
+describe('Official source links are durable', () => {
+  /**
+   * The first dataset used deep paths invented from memory
+   * (/international-applicants, /tuition-fees). Several 404'd in production,
+   * which undermines the entire data-honesty claim. These tests enforce the
+   * shape that stopped it; `npm run check:links` verifies they actually resolve.
+   */
+  const urlFieldsOf = (u: (typeof UNIVERSITIES)[number]) => [
+    ['officialUrl', u.officialUrl],
+    ['scholarshipUrl', u.scholarshipUrl],
+    ['sources.admissions', u.sources.admissions],
+    ['sources.tuition', u.sources.tuition],
+    ['sources.scholarships', u.sources.scholarships],
+  ] as const;
+
+  it('every URL parses and uses https', () => {
+    for (const u of UNIVERSITIES) {
+      for (const [field, url] of urlFieldsOf(u)) {
+        expect(() => new URL(url), `${u.id}.${field}`).not.toThrow();
+        expect(new URL(url).protocol, `${u.id}.${field}`).toBe('https:');
+      }
+    }
+  });
+
+  it('carries no deep path, which is what broke before', () => {
+    for (const u of UNIVERSITIES) {
+      for (const [field, url] of urlFieldsOf(u)) {
+        const path = new URL(url).pathname.replace(/\/$/, '');
+        expect(path, `${u.id}.${field} points at a deep page that can move: ${url}`).toBe('');
+      }
+    }
+  });
+
+  it('keeps every link for a university on that institution\u2019s own host', () => {
+    for (const u of UNIVERSITIES) {
+      const hosts = new Set(urlFieldsOf(u).map(([, url]) => new URL(url).host));
+      expect(hosts.size, `${u.id} links point at ${hosts.size} different hosts`).toBe(1);
+    }
+  });
+
+  it('never points two different universities at the same host', () => {
+    const byHost = new Map<string, string[]>();
+    for (const u of UNIVERSITIES) {
+      const host = new URL(u.officialUrl).host;
+      byHost.set(host, [...(byHost.get(host) ?? []), u.id]);
+    }
+    for (const [host, ids] of byHost) {
+      // NYU and NYU Abu Dhabi are distinct institutions on distinct hosts.
+      expect(ids.length, `${host} is shared by ${ids.join(', ')}`).toBe(1);
+    }
+  });
 });

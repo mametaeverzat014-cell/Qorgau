@@ -27,6 +27,9 @@ build itself** — they are listed here so nothing is missed.
 - [x] Progress tracking responds to real task completion
 - [x] Demo profiles load in one click
 - [x] Official source links present on every university
+- [ ] **Run `npm run check:links` from a machine with internet** and confirm every
+      source URL resolves. The sandbox this was built in blocks outbound traffic,
+      so the links could not be verified live here.
 - [x] Empty, loading and error states handled; no crash paths found
 - [x] Responsive from 390px to projector width
 - [ ] **Test account if needed** — not applicable: no login exists
@@ -38,7 +41,7 @@ build itself** — they are listed here so nothing is missed.
 - [x] No API keys, secrets or `.env` files committed
 - [x] `.env.example` documents every optional variable
 - [x] `npm install && npm run build` succeeds from a clean clone
-- [x] 62 automated tests pass (`npm run test`)
+- [x] 66 automated tests pass (`npm run test`)
 - [x] TypeScript strict mode passes (`npm run typecheck`)
 - [x] Lint passes as part of the production build
 

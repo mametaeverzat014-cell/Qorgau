@@ -277,7 +277,7 @@ export default function UniversityDetailPage() {
             <p className="mt-4 text-[13.5px] leading-[1.7] text-ink-soft">{uni.aidNote}</p>
 
             <Button variant="secondary" size="sm" href={uni.scholarshipUrl} className="mt-4">
-              View official scholarship page <ExternalLink size={13} />
+              Check scholarships on the official site <ExternalLink size={13} />
             </Button>
           </Card>
         </div>
@@ -354,41 +354,48 @@ export default function UniversityDetailPage() {
 
         {/* ---------------- Sources ---------------- */}
         <Card className="ap-rise mt-4 p-5 sm:p-6">
-          <h2 className="text-[17px] font-semibold text-ink">Official sources</h2>
+          <h2 className="text-[17px] font-semibold text-ink">Official source</h2>
           <p className="mt-2 max-w-3xl text-[13.5px] leading-[1.7] text-muted">
-            Everything factual on this page traces back to one of these pages. Figures marked{' '}
-            <Badge tone="neutral">Estimate</Badge> are our indicative compilation for the current cycle
-            and are not quoted from the institution — treat them as a planning starting point, not a
-            quotation. Figures marked <Badge tone="good">Published</Badge> reflect stated institutional
-            policy.
+            Everything on this page must be confirmed with {uni.shortName} before you act on it.
+            Figures marked <Badge tone="neutral">Estimate</Badge> are our indicative compilation for
+            the current cycle and are not quoted from the institution. Figures marked{' '}
+            <Badge tone="good">Published</Badge> reflect stated institutional policy.
           </p>
-          <div className="mt-5 grid gap-2.5 sm:grid-cols-3">
-            {(
-              [
-                ['Admissions', uni.sources.admissions],
-                ['Tuition and fees', uni.sources.tuition],
-                ['Scholarships and aid', uni.sources.scholarships],
-              ] as [string, string][]
-            ).map(([label, url]) => (
-              <a
-                key={label}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex min-w-0 items-start justify-between gap-3 rounded-[11px] border border-line bg-paper p-4 transition-all duration-200 hover:border-line-strong hover:bg-surface-soft"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[13.5px] font-medium text-ink">{label}</span>
-                  <span className="mt-0.5 block truncate text-[12px] text-faint">
-                    {url.replace(/^https:\/\//, '')}
-                  </span>
-                </span>
-                <ExternalLink
-                  size={14}
-                  className="mt-0.5 shrink-0 text-faint transition-colors group-hover:text-ink"
-                />
-              </a>
-            ))}
+
+          <a
+            href={uni.officialUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group mt-5 flex items-center justify-between gap-3 rounded-[11px] border border-line bg-paper p-4 transition-all duration-200 hover:border-line-strong hover:bg-surface-soft"
+          >
+            <span className="min-w-0">
+              <span className="block text-[14px] font-semibold text-ink">
+                Open the official {uni.shortName} website
+              </span>
+              <span className="mt-0.5 block truncate text-[12.5px] text-faint">
+                {uni.officialUrl.replace(/^https:\/\//, '')}
+              </span>
+            </span>
+            <ExternalLink
+              size={16}
+              className="shrink-0 text-faint transition-colors group-hover:text-ink"
+            />
+          </a>
+
+          <div className="mt-4">
+            <h3 className="text-[12px] font-semibold uppercase tracking-[0.07em] text-faint">
+              Check these three things there
+            </h3>
+            <ul className="mt-2.5 space-y-1.5 text-[13px] leading-[1.6] text-ink-soft">
+              <li>· Entry requirements for international applicants, and this year&rsquo;s deadlines</li>
+              <li>· Current tuition and the estimated cost of living</li>
+              <li>· Scholarships open to international undergraduates, and their separate deadlines</li>
+            </ul>
+            <p className="mt-3 text-[12.5px] leading-[1.6] text-faint">
+              We link the institution&rsquo;s main site rather than a deep page on purpose: universities
+              reorganise their admissions pages frequently, and a link that 404s is worse than one that
+              makes you navigate one level.
+            </p>
           </div>
         </Card>
 

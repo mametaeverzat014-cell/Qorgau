@@ -187,8 +187,21 @@ regions**, chosen to exercise every branch of the engine: need-blind full-need U
 models, low-cost European public systems, Asian scholarship-dense universities, and sticker-price
 privates with little international aid.
 
-**Every record carries three official source links** — admissions, tuition, and scholarships — exposed
-in the UI as "View official source" on each university's detail page.
+**Every record links to the institution's official website**, exposed on each university's detail page
+as "Open the official … website", alongside the three things a student must confirm there: entry
+requirements and deadlines, current tuition and living costs, and scholarships for international
+undergraduates.
+
+We link the institution's canonical domain rather than a deep page, deliberately. The first version of
+this dataset used deep paths (`/international-applicants`, `/tuition-fees`) written from memory;
+several 404'd in production. Universities reorganise those pages constantly, and a broken "official
+source" link is worse than one that makes you navigate a single level — the entire data-honesty claim
+rests on those links working. Two guards now exist:
+
+- Four unit tests enforce the durable shape: valid https, no deep path, all links for a university on
+  that institution's own host, and no two universities sharing a host.
+- `npm run check:links` performs a real HTTP check of every URL in the dataset and exits non-zero on
+  any failure. Run it from a machine with normal internet access before submitting.
 
 Source types used, in order of preference:
 
@@ -291,10 +304,11 @@ npm run dev        # http://localhost:3000
 Verification:
 
 ```bash
-npm run typecheck  # tsc --noEmit, strict mode
-npm run test       # 62 Vitest tests
-npm run build      # production build
-npm run verify     # all three in sequence
+npm run typecheck   # tsc --noEmit, strict mode
+npm run test        # 66 Vitest tests
+npm run build       # production build
+npm run verify      # all three in sequence
+npm run check:links # real HTTP check of every source URL (needs internet)
 ```
 
 Optional AI layer:
@@ -325,7 +339,7 @@ vercel --prod
 `ANTHROPIC_API_KEY` is optional. Set it in Settings → Environment Variables only if you want the
 "Rephrase with AI" button live; everything else works without it.
 
-Verified deployment-readiness (see `FINAL_AUDIT.md`): a clean clone installs, type-checks, passes 62
+Verified deployment-readiness (see `FINAL_AUDIT.md`): a clean clone installs, type-checks, passes 66
 tests and builds; all 35 university pages pre-render; the production server handles unknown ids and
 nonsense routes without falling over.
 
