@@ -123,10 +123,54 @@ export const MAJOR_CLUSTERS: MajorKey[][] = [
 /* ------------------------------------------------------------------ */
 
 /**
- * Every factual number in the dataset carries its provenance so the UI can be
- * honest about what is published by the institution and what we estimated.
+ * Provenance vocabulary.
+ *
+ * There is deliberately no "published" status. Claiming a value is published by
+ * an institution asserts something we did not verify against that institution's
+ * live pages, and an earlier version of this dataset proved how that goes: URLs
+ * written from memory returned 404 in production. A judge can disprove a false
+ * "Published" badge in thirty seconds, and in the one category that matters most
+ * that costs far more than the badge was ever worth.
+ *
+ *  - `curated`    compiled from the institution's public materials when the
+ *                 dataset was assembled, and not re-verified since
+ *  - `estimated`  AdmitPath's own indicative figure, not quoted from anyone
+ *  - `unverified` we do not know, and the value is null
  */
-export type Confidence = 'published' | 'estimate' | 'unknown';
+export type Confidence = 'curated' | 'estimated' | 'unverified';
+
+export const CONFIDENCE_LABELS: Record<Confidence, string> = {
+  curated: 'Curated',
+  estimated: 'Estimate',
+  unverified: 'Unverified',
+};
+
+export const CONFIDENCE_TOOLTIPS: Record<Confidence, string> = {
+  curated:
+    'Compiled from this institution\u2019s public materials when our dataset was assembled, and not re-verified since. Confirm it on the official site before you rely on it.',
+  estimated:
+    'An indicative figure produced by AdmitPath for planning, not a number quoted by the institution. Costs vary by programme, citizenship and year.',
+  unverified:
+    'We could not establish this value, so we show nothing rather than inventing a plausible number.',
+};
+
+/**
+ * Per-institution provenance. Kept as one small record rather than wrapping every
+ * field in an object: it carries the same information for the UI and the tests
+ * without churning the whole dataset shape.
+ */
+export interface UniversityProvenance {
+  /** ISO date the record was compiled. Shown in the UI as "Last reviewed". */
+  compiledOn: string;
+  /** Entry requirements: English minimums, test policy, application platform. */
+  requirements: Confidence;
+  /** Tuition and living costs. */
+  costs: Confidence;
+  /** Application and scholarship deadlines. */
+  deadlines: Confidence;
+  /** Scholarship and financial-aid policy. */
+  aid: Confidence;
+}
 
 export interface Money {
   /** Annual figure in USD. `null` means we could not verify it. */
@@ -236,6 +280,8 @@ export interface University {
   officialUrl: string;
   scholarshipUrl: string;
   sources: UniversitySources;
+  /** Where each class of fact on this record came from, and when. */
+  provenance: UniversityProvenance;
 
   highlights: string[];
 }

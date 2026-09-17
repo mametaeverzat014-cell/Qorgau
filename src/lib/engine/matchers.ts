@@ -201,7 +201,7 @@ export function calculateFinancialFit(profile: StudentProfile, uni: University):
     flags.push('above-budget');
   }
 
-  if (uni.estimatedTuition.confidence === 'estimate' || uni.estimatedLivingCost.confidence === 'estimate') {
+  if (uni.estimatedTuition.confidence === 'estimated' || uni.estimatedLivingCost.confidence === 'estimated') {
     flags.push('cost-estimated');
   }
 

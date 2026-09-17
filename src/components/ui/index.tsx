@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { Info } from 'lucide-react';
+import { CONFIDENCE_LABELS, CONFIDENCE_TOOLTIPS, type Confidence } from '@/lib/types';
 
 /* ------------------------------------------------------------------ */
 /* Button                                                              */
@@ -330,25 +331,27 @@ export function DataPoint({
 }: {
   label: string;
   value: string;
-  confidence?: 'published' | 'estimate' | 'unknown';
+  confidence?: Confidence;
   note?: string;
 }) {
+  const tone: Record<Confidence, 'neutral' | 'brand' | 'warn'> = {
+    curated: 'brand',
+    estimated: 'neutral',
+    unverified: 'warn',
+  };
   return (
     <div className="flex flex-col gap-1 border-b border-line py-3 last:border-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
       <span className="text-[13.5px] text-muted">{label}</span>
       <span className="flex items-center gap-2 text-right">
         <span className="tnum text-[14.5px] font-medium text-ink">{value}</span>
-        {confidence === 'estimate' && (
-          <Badge tone="neutral" title={note ?? 'Indicative figure compiled for this project — confirm at the official source.'}>
-            Estimate
+        {confidence && (
+          <Badge
+            tone={tone[confidence]}
+            title={note ? `${CONFIDENCE_TOOLTIPS[confidence]} ${note}` : CONFIDENCE_TOOLTIPS[confidence]}
+          >
+            {CONFIDENCE_LABELS[confidence]}
           </Badge>
         )}
-        {confidence === 'published' && (
-          <Badge tone="good" title="Stated by the institution on its official pages.">
-            Published
-          </Badge>
-        )}
-        {confidence === 'unknown' && <Badge tone="warn">Unverified</Badge>}
       </span>
     </div>
   );

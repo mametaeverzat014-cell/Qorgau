@@ -442,9 +442,19 @@ describe('Dataset integrity', () => {
 
   it('marks every monetary figure with an explicit confidence level', () => {
     for (const u of UNIVERSITIES) {
-      expect(['published', 'estimate', 'unknown']).toContain(u.estimatedTuition.confidence);
-      expect(['published', 'estimate', 'unknown']).toContain(u.estimatedLivingCost.confidence);
-      if (u.estimatedTuition.confidence === 'unknown') expect(u.estimatedTuition.value).toBeNull();
+      expect(['curated', 'estimated', 'unverified']).toContain(u.estimatedTuition.confidence);
+      expect(['curated', 'estimated', 'unverified']).toContain(u.estimatedLivingCost.confidence);
+      if (u.estimatedTuition.confidence === 'unverified') expect(u.estimatedTuition.value).toBeNull();
+      if (u.estimatedLivingCost.confidence === 'unverified') expect(u.estimatedLivingCost.value).toBeNull();
+    }
+  });
+
+  it('never claims a cost figure was published by the institution', () => {
+    // We did not verify these against live institutional pages, so presenting
+    // them as published would be an assertion the product cannot support.
+    for (const u of UNIVERSITIES) {
+      expect(u.estimatedTuition.confidence).toBe('estimated');
+      expect(u.estimatedLivingCost.confidence).toBe('estimated');
     }
   });
 });

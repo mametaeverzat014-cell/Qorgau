@@ -300,7 +300,7 @@ export default function UniversityDetailPage() {
                       ? `IELTS ~${uni.recommendedIELTS} recommended`
                       : 'Not published'
                 }
-                confidence={uni.minimumIELTS !== null ? 'published' : 'unknown'}
+                confidence={uni.minimumIELTS !== null ? uni.provenance.requirements : 'unverified'}
               />
               <DataPoint
                 label="SAT / ACT policy"
@@ -311,15 +311,19 @@ export default function UniversityDetailPage() {
                         uni.recommendedSAT ? ` · typical ~${uni.recommendedSAT}` : ''
                       }`
                 }
-                confidence={uni.satPolicy === 'unknown' ? 'unknown' : 'published'}
+                confidence={uni.satPolicy === 'unknown' ? 'unverified' : uni.provenance.requirements}
               />
               <DataPoint
                 label="Typical academic profile"
                 value={`~${uni.gpaExpectation}% school average`}
-                confidence="estimate"
+                confidence="estimated"
                 note="Our normalised estimate of a competitive intake, not an official cut-off."
               />
-              <DataPoint label="Application platform" value={uni.applicationPlatform} confidence="published" />
+              <DataPoint
+                label="Application platform"
+                value={uni.applicationPlatform}
+                confidence={uni.provenance.requirements}
+              />
             </div>
             <p className="mt-3 text-[12.5px] leading-[1.6] text-muted">{uni.selectivityNote}</p>
           </Card>
@@ -331,8 +335,16 @@ export default function UniversityDetailPage() {
               <h2 className="text-[17px] font-semibold text-ink">Important deadlines</h2>
             </div>
             <div className="mt-4">
-              <DataPoint label="Application deadline" value={deadlineDisplay(uni.applicationDeadline)} />
-              <DataPoint label="Scholarship deadline" value={deadlineDisplay(uni.scholarshipDeadline)} />
+              <DataPoint
+                label="Application deadline"
+                value={deadlineDisplay(uni.applicationDeadline)}
+                confidence={uni.applicationDeadline ? uni.provenance.deadlines : 'unverified'}
+              />
+              <DataPoint
+                label="Scholarship deadline"
+                value={deadlineDisplay(uni.scholarshipDeadline)}
+                confidence={uni.scholarshipDeadline ? uni.provenance.deadlines : 'unverified'}
+              />
             </div>
             <p className="mt-3 text-[12.5px] leading-[1.6] text-muted">
               Deadlines shown are the typical international undergraduate dates for this cycle. They move
@@ -357,9 +369,41 @@ export default function UniversityDetailPage() {
           <h2 className="text-[17px] font-semibold text-ink">Official source</h2>
           <p className="mt-2 max-w-3xl text-[13.5px] leading-[1.7] text-muted">
             Everything on this page must be confirmed with {uni.shortName} before you act on it.
-            Figures marked <Badge tone="neutral">Estimate</Badge> are our indicative compilation for
-            the current cycle and are not quoted from the institution. Figures marked{' '}
-            <Badge tone="good">Published</Badge> reflect stated institutional policy.
+            Nothing here is labelled &ldquo;published&rdquo;, because we did not re-verify these values
+            against the institution&rsquo;s live pages — and a badge a judge can disprove is worth less
+            than an honest one.
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-[10px] border border-line bg-paper p-3">
+              <Badge tone="brand">Curated</Badge>
+              <p className="mt-2 text-[12.5px] leading-[1.55] text-muted">
+                Compiled from this university&rsquo;s public materials when our dataset was assembled.
+                Requirements, deadlines and aid policy.
+              </p>
+            </div>
+            <div className="rounded-[10px] border border-line bg-paper p-3">
+              <Badge tone="neutral">Estimate</Badge>
+              <p className="mt-2 text-[12.5px] leading-[1.55] text-muted">
+                AdmitPath&rsquo;s own indicative figure, not quoted from anyone. All tuition and living
+                costs.
+              </p>
+            </div>
+            <div className="rounded-[10px] border border-line bg-paper p-3">
+              <Badge tone="warn">Unverified</Badge>
+              <p className="mt-2 text-[12.5px] leading-[1.55] text-muted">
+                We could not establish the value, so we show nothing rather than a plausible invention.
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-[12.5px] text-faint">
+            Record last reviewed{' '}
+            {new Date(`${uni.provenance.compiledOn}T00:00:00Z`).toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              timeZone: 'UTC',
+            })}
+            . AdmitPath uses a curated snapshot for the current admissions cycle — it is not a live feed.
           </p>
 
           <a
