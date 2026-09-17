@@ -211,9 +211,9 @@ export default function UniversityDetailPage() {
           </div>
         </Card>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-2">
           {/* ---------------- Financial ---------------- */}
-          <Card className="ap-rise p-6">
+          <Card className="ap-rise min-w-0 p-5 sm:p-6">
             <div className="flex items-center gap-2">
               <Wallet size={16} className="text-muted" strokeWidth={2} />
               <h2 className="text-[17px] font-semibold text-ink">Financial picture</h2>
@@ -253,7 +253,7 @@ export default function UniversityDetailPage() {
           </Card>
 
           {/* ---------------- Scholarships ---------------- */}
-          <Card className="ap-rise p-6">
+          <Card className="ap-rise min-w-0 p-5 sm:p-6">
             <div className="flex items-center gap-2">
               <ScrollText size={16} className="text-muted" strokeWidth={2} />
               <h2 className="text-[17px] font-semibold text-ink">Scholarships and aid</h2>
@@ -276,15 +276,20 @@ export default function UniversityDetailPage() {
 
             <p className="mt-4 text-[13.5px] leading-[1.7] text-ink-soft">{uni.aidNote}</p>
 
-            <Button variant="secondary" size="sm" href={uni.scholarshipUrl} className="mt-4">
-              Check scholarships on the official site <ExternalLink size={13} />
+            <Button
+              variant="secondary"
+              size="sm"
+              href={uni.scholarshipUrl}
+              className="mt-4 h-auto whitespace-normal py-2 text-left"
+            >
+              Check scholarships on the official site <ExternalLink size={13} className="shrink-0" />
             </Button>
           </Card>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-2">
           {/* ---------------- Requirements ---------------- */}
-          <Card className="ap-rise p-6">
+          <Card className="ap-rise min-w-0 p-5 sm:p-6">
             <div className="flex items-center gap-2">
               <BookOpen size={16} className="text-muted" strokeWidth={2} />
               <h2 className="text-[17px] font-semibold text-ink">Entry requirements</h2>
@@ -329,7 +334,7 @@ export default function UniversityDetailPage() {
           </Card>
 
           {/* ---------------- Deadlines ---------------- */}
-          <Card className="ap-rise p-6">
+          <Card className="ap-rise min-w-0 p-5 sm:p-6">
             <div className="flex items-center gap-2">
               <CalendarDays size={16} className="text-muted" strokeWidth={2} />
               <h2 className="text-[17px] font-semibold text-ink">Important deadlines</h2>

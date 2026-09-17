@@ -27,8 +27,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Loaded at runtime rather than build time so the app builds and runs
-            in fully offline environments, falling back to the system stack. */}
+        {/* Loaded at runtime rather than at build time so the app builds and runs
+            in fully offline environments, falling back to the system stack.
+
+            The no-page-custom-font rule targets the Pages Router, where a font in
+            a page rather than _document really would load for one route only.
+            This is the App Router root layout, so it already applies to every
+            route and the warning does not hold. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"

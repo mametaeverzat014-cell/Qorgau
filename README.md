@@ -8,7 +8,14 @@ A student answers a five-step questionnaire once. AdmitPath then tells them wher
 fit, **why** each recommendation was produced, how the options differ, what is missing from their
 profile, which deadlines matter, what to do next, and how much of the route they have completed.
 
-It is not a university search engine. It is a personalized **application route**.
+> **AdmitPath is a decision engine, not a university directory.**
+>
+> A directory answers *"which universities exist?"*. A student already has that. The question they
+> cannot answer is *"what happens to my plan when my real constraints change?"* — when the family
+> budget drops, when a country comes off the list, when a test score improves.
+>
+> AdmitPath answers that, and shows its work: **what** changed, **why** it changed, and **what to do
+> next**. Every ranking decomposes into seven weighted scores you can check by hand.
 
 ---
 
@@ -211,6 +218,41 @@ Source types used, in order of preference:
 
 No aggregators are used where an official source exists.
 
+### Accuracy and data provenance
+
+The first rubric category is Accuracy and Verifiability, and it is also the first tie-breaker, so this
+is where the product is most deliberate.
+
+**There is no "Published" badge, on purpose.** Claiming a value is published by an institution asserts
+something we did not verify against that institution's live pages. An earlier version of this dataset
+proved how that goes: source URLs written from memory returned 404 in production. A badge a judge can
+disprove in thirty seconds is worth less than an honest one. The three states are:
+
+| Badge | Meaning | Applies to |
+| --- | --- | --- |
+| **Curated** | Compiled from the institution's public materials when the dataset was assembled, and not re-verified since | Entry requirements, deadlines, aid policy |
+| **Estimate** | AdmitPath's own indicative figure, quoted from nobody | All tuition and living costs |
+| **Unverified** | We could not establish it, so the value is `null` and we show nothing | Anything we could not confirm |
+
+Every record carries a `provenance` block with `compiledOn` plus a status per fact class, and each
+detail page shows a provenance legend and *"Record last reviewed …"*. AdmitPath uses a curated
+snapshot for the current admissions cycle; it is not a live feed, and it says so.
+
+**Aid reliability is modelled explicitly.** A published maximum award says nothing about whether a
+given student will receive it, so every institution carries an `aidCertainty`:
+
+| Certainty | Meaning |
+| --- | --- |
+| `meets-full-need` | States it meets the full demonstrated need of admitted internationals — dependable once admitted |
+| `structural` | Low or zero cost is the default for everyone admitted, not a contest |
+| `competitive` | Awards exist and can be large, but you must win them against a field |
+| `minimal` | Little or nothing published for international undergraduates |
+
+This is why, for a student with a $5,000 budget, **Harvard scores 59 and TU Delft 40** despite
+stickers of $91,000 and $37,000. Harvard commits to meeting need; TU Delft awards a handful of
+scholarships a year. Collapsing that distinction — as a single `fullRidePossible` flag does — tells a
+high-need student something false about their own chances.
+
 ### Data honesty policy
 
 This matters more than dataset size, so it is enforced in the type system:
@@ -305,11 +347,28 @@ Verification:
 
 ```bash
 npm run typecheck   # tsc --noEmit, strict mode
-npm run test        # 66 Vitest tests
+npm run test        # 124 Vitest tests
 npm run build       # production build
 npm run verify      # all three in sequence
 npm run check:links # real HTTP check of every source URL (needs internet)
 ```
+
+### Testing
+
+124 unit tests across five suites, plus browser verification against the production build.
+
+| Suite | Tests | What it guards |
+| --- | --- | --- |
+| `engine.test.ts` | 37 | The ten scenarios the case requires: budget and country sensitivity, major ranking, IELTS warnings, missing SAT never scored as zero, full-scholarship penalties, ≥3 results, reasons present, roadmap responds to gaps, progress responds to completion |
+| `sensitivity.test.ts` | 17 | Behavioural parameter sensitivity — monotonicity, verdict flips, set turnover, and that components × weights reconstruct the headline score |
+| `product.test.ts` | 30 | Generated copy contains no raw dates, no `undefined`/`NaN`, and **never claims an admission probability**; what-if diffs; comparison discrimination; nine degenerate profiles |
+| `dataset.test.ts` | 17 | Data quality: unique ids, provenance completeness, nulls not coerced to zero, no negative or implausible money, score ranges, deadlines inside the cycle, aid-claim consistency |
+| `storage.test.ts` | 23 | Corrupt persisted state — wrong types, NaN, unknown enums, prototype pollution, 10KB strings — must stay both well-shaped and scoreable |
+
+Measured in a headless browser against `next start`: **0 of 10** corrupt-storage cases crash the app
+(was 7 of 8 before hardening), **11/12** hostile-state scenarios pass, **64/64** viewport/route
+combinations show no horizontal overflow from 320px to 1920px, accessibility is clean on 7 routes, and
+there are no uncaught JavaScript errors.
 
 Optional AI layer:
 
@@ -339,7 +398,7 @@ vercel --prod
 `ANTHROPIC_API_KEY` is optional. Set it in Settings → Environment Variables only if you want the
 "Rephrase with AI" button live; everything else works without it.
 
-Verified deployment-readiness (see `FINAL_AUDIT.md`): a clean clone installs, type-checks, passes 66
+Verified deployment-readiness (see `FINAL_AUDIT.md`): a clean clone installs, type-checks, passes 124
 tests and builds; all 35 university pages pre-render; the production server handles unknown ids and
 nonsense routes without falling over.
 

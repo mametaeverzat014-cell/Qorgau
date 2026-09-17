@@ -1,161 +1,133 @@
 # AdmitPath AI — demo video script (≤3 minutes)
 
 **Product:** AdmitPath AI · **Case:** LOCUSCASE2 «Маршрут поступления»
-**Tagline:** From "Where can I apply?" to "What should I do next?"
+**Principle for this script:** show the product working. Do not narrate architecture — one sentence on
+the engine is enough, and slide 7 of the deck covers the rest.
 
-**Before recording:** open the deployed site, click **Clear my data** in the footer, and reload. Use a
-1440×900 window. Do not use the browser zoom. Rehearse once — the timings below are tight but real.
+**Before recording:** open the deployed site in a **private window**, 1440×900, no browser zoom.
+Rehearse once — the timings are tight but real.
 
 ---
 
-## 0:00–0:20 — The problem
+## 0:00–0:18 — The problem
 
 **On screen:** the welcome page, still.
 
-> "Every year a student sits down to apply abroad and hits the same wall. They don't know which
-> universities fit them, whether they can afford them, if their IELTS is enough, or which deadline
-> comes first.
+> "A student applying abroad doesn't lack university lists. They lack a decision path.
 >
-> The tools they find hand them twenty university names and stop. But a list is not a plan — it
-> leaves every hard question unanswered."
-
-**Action at 0:15:** scroll slightly to show *"A university list is not a plan."*
+> They can't tell what they can actually afford, whether their IELTS is enough, or which deadline
+> comes first. Most tools hand them twenty names and stop."
 
 ---
 
-## 0:20–0:45 — Questionnaire
+## 0:18–0:40 — Profile in, diagnostics out
 
-**Action:** click **Build My Route**. Move through the steps quickly — do not fill every field on
-camera.
+**Action:** click **Try Demo Profile → Aizhan**. Land on diagnostics.
 
-> "AdmitPath starts with one questionnaire. Five steps, about two minutes — never twenty fields on one
-> page.
+> "One questionnaire — five steps, about two minutes. Here's a bundled profile: strong academics,
+> needs a full scholarship, looking at the US and Hong Kong.
 >
-> We ask what actually changes an answer: the academic record, the test scores, the destination, and —
-> critically — what the family can genuinely pay."
-
-**Action at 0:35:** land on **Step 4, Budget**, and pause on it for two full seconds.
-
-> "This is the question most tools never ask properly."
-
-**Action at 0:40:** go back to the welcome screen and click **Try Demo Profile → Aizhan**, so judges
-see nothing is typed live.
-
-> "To save time, here's a bundled profile: strong academics, needs a full scholarship, looking at the
-> US and Hong Kong."
+> Before a single university appears, we show her where she stands. Financial flexibility: limited.
+> Scholarship dependence: very high. Every line comes from her own answers."
 
 ---
 
-## 0:45–1:20 — Diagnostics and explained recommendations
+## 0:40–1:05 — Recommendations that explain themselves
 
-**On screen:** the diagnostics page.
+**Action:** click **See recommendations**. Let the cards land.
 
-> "Before a single university appears, we show her where she stands. Academics: strong. Financial
-> flexibility: limited. Scholarship dependence: very high. Every line comes from her own answers."
+> "Eight universities, and every one explains itself. Berea College is first because it charges no
+> tuition at all — surfaced precisely because she needs full-cost support."
 
-**Action at 0:55:** click **See recommendations**.
+**Action at 0:55:** expand **"Why 92%? See the seven scores"** on the top card.
 
-> "Now eight universities, ranked. And every one of them explains itself."
-
-**Action at 1:02:** point at the top card's *Why it matches you* list.
-
-> "Berea College is first because it charges no tuition at all — surfaced precisely because she needs
-> full-cost support. Underneath: what to watch out for. Admission there is extremely selective by
-> volume.
->
-> And this number is a **match score** — alignment with her profile. We do not predict admission
-> chances anywhere in this product, and we say so everywhere it appears."
+> "And you can check our arithmetic. Seven dimensions, fixed weights, every score visible. This is a
+> **match score** — alignment with her profile. We do not predict admission chances anywhere in this
+> product."
 
 ---
 
-## 1:20–1:45 — The what-if moment
+## 1:05–1:40 — The what-if moment *(never cut this)*
 
 **Action:** in **What-if controls**, click **$25,000**.
 
-> "Now watch what the case asks for. Her budget goes from five thousand a year to twenty-five."
+> "Now the part the case asks for. Her budget goes from five thousand a year to twenty-five."
 
-**Action:** let the **"What changed?"** panel land. Read from it.
+**Action:** let the **"What changed?"** panel land. Read from it, don't paraphrase.
 
-> "The product doesn't just re-sort silently. It tells her: her funding requirement dropped from a
-> full ride to partial. Ten more universities are now affordable without depending on aid. CityU Hong
-> Kong entered her results. Harvard dropped out."
+> "It doesn't silently re-sort. It tells her: her funding requirement dropped from a full ride to
+> partial. Ten more universities are affordable without aid. CityU Hong Kong entered. Harvard dropped
+> out."
 
-**Action at 1:33:** deselect **USA** and **Hong Kong**, select **South Korea**.
+**Action at 1:25:** deselect **USA** and **Hong Kong**, select **South Korea**.
 
-> "And now the country. Her entire list turns over — KAIST, POSTECH, Seoul National. Her top match
-> moves from Berea College to KAIST, and it names every university that entered and left.
+> "And the country. The entire list turns over — KAIST, POSTECH, Seoul National. Her top match moves
+> from Berea College to KAIST, and it names every university that entered and left.
 >
-> This is a live recalculation, not a filter."
+> That's a live recalculation, not a filter."
 
 ---
 
-## 1:45–2:10 — Comparison
+## 1:40–2:05 — Trust
 
-**Action:** click **Reset**, then **Compare** on three cards, then open **Compare**.
+**Action:** click **Reset**, then open any university's **View details**. Scroll to the cost block.
 
-> "Three universities, side by side across fifteen dimensions."
-
-**Action:** scroll to the *best-case cost* and *where it wins / where it loses* rows.
-
-> "This isn't a repeat of the cards. We mark the winning cell on every comparable dimension, and each
-> column states where that option **wins and loses relative to the others she picked**. That's what
-> makes it a decision, not a summary."
-
----
-
-## 2:10–2:35 — Roadmap and next action
-
-**Action:** open **Roadmap**.
-
-> "Then the part that makes this a route. Twenty dated tasks from September through March, built from
-> her gaps and the real deadlines of her shortlist."
-
-**Action:** hover a task's *"Generated because"* line.
-
-> "Every task says why it exists. She gets an IELTS retake task because her score is short at one of
-> her universities. She gets financial-documentation tasks because she told us she needs aid. Nothing
-> here is a generic checklist."
-
-**Action at 2:25:** click **Mark complete** on **Your next step**.
-
----
-
-## 2:35–2:55 — Progress
-
-**On screen:** the progress panel updating.
-
-> "She completes a step — and progress moves. The shortlist track advances, the overall route
-> percentage rises, and her next step changes to preparing financial aid documents, with a new reason
-> attached.
+> "Every cost here is labelled an **Estimate** — our figure, not the university's. Requirements are
+> **Curated**. Anything we couldn't verify stays **Unverified** and shows nothing rather than a
+> plausible number.
 >
-> This only ever moves when she actually does something. There is no decorative progress anywhere in
-> this product."
-
-**Action at 2:50:** open **Dashboard** for the final wide shot.
+> There's deliberately no 'Published' badge, because we didn't re-verify these against live
+> institutional pages — and a badge you could disprove in thirty seconds is worth less than an honest
+> one."
 
 ---
 
-## 2:55–3:00 — Close
+## 2:05–2:25 — Comparison
 
-> "AdmitPath AI. From 'where can I apply' to 'what should I do next' — with the reasoning, every step
-> of the way."
+**Action:** back to recommendations, **Compare** on three, open **Compare**.
+
+> "Three universities across fifteen dimensions. The winning cell is marked on every comparable one,
+> and each column says where that option **wins and loses relative to the others she picked** — so
+> it's a decision, not a second copy of the cards."
+
+---
+
+## 2:25–2:50 — Route and progress
+
+**Action:** open **Roadmap**, hover a *"Generated because"* line, then click **Mark complete**.
+
+> "Then the route. Twenty dated tasks built from her gaps and the real deadlines of her shortlist —
+> every one says why it exists. She gets an IELTS retake task because her score is short at one of her
+> universities.
+>
+> She completes a step, and progress moves. Her next step changes, with a new reason attached. It only
+> ever moves when she actually does something."
+
+---
+
+## 2:50–3:00 — Close
+
+> "AdmitPath is a decision engine, not a university directory. From 'where can I apply' to 'what
+> should I do next' — with the reasoning at every step."
 
 ---
 
 ## Recording checklist
 
-- [ ] Data cleared before recording
-- [ ] Demo profile loads in one click, nothing typed live
-- [ ] "What changed?" panel is readable on screen for at least 3 seconds
-- [ ] Country switch shown clearly as a full turnover
-- [ ] The phrase "match score, not admission probability" said out loud at least once
+- [ ] Private window, data cleared
+- [ ] Demo profile loads in one click, nothing typed on camera
+- [ ] Score breakdown expanded on camera — this is the auditability proof
+- [ ] "What changed?" panel readable for at least 3 seconds
+- [ ] Country switch shown as a full turnover
+- [ ] "Match score, not admission probability" said out loud
+- [ ] Provenance badges shown on camera
 - [ ] Progress visibly moves after completing a task
-- [ ] Total length ≤ 3:00
-- [ ] Audio is clear; no background noise
-- [ ] Exported at 1080p or better
+- [ ] Total length ≤ 3:00, exported at 1080p or better
 
-## If the demo must be shortened to 2 minutes
+## If you must cut to 2 minutes
 
-Cut in this order: the 0:20–0:45 questionnaire walkthrough (jump straight to the demo profile), then
-the comparison narration (keep the screen, shorten the words). **Never cut the what-if section** — it
-is the requirement the case names explicitly.
+Cut in this order: the trust section at 1:40 (keep it in the deck instead), then the comparison
+narration (keep the screen, shorten the words), then the close to one sentence.
+
+**Never cut 1:05–1:40.** That is the case requirement judges are explicitly looking for, and it is the
+strongest thirty-five seconds in the product.

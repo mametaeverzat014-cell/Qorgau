@@ -64,7 +64,34 @@ universities without first understanding their own position cannot evaluate them
 
 ---
 
-## Slide 4 — Recommendation engine
+## Slide 4 — The wow moment
+
+**Headline**
+> Change one constraint. Watch the route change.
+
+**On slide** — two real before/after panels, screenshots not text:
+
+```
+Budget: $5,000 -> $25,000
+Funding requirement: full ride -> partial
+ + 10 universities now financially compatible
+ - Harvard dropped out   + CityU HK entered
+```
+
+```
+Destination: USA + Hong Kong -> South Korea
+ Top match: Berea College -> KAIST
+ 6 of 6 recommendations replaced
+```
+
+**Speaker note (30s):** This is the case requirement, and it is the live demo. Changing the country
+turns the list over completely. Changing the budget also changes the funding requirement it implies —
+and we say so, rather than pretending nothing else moved. Every line is computed from the before and
+after states, not scripted.
+
+---
+
+## Slide 5 — How personalization works
 
 **Headline**
 > Seven dimensions. Zero black box.
@@ -88,35 +115,28 @@ unknown and never as zero, and we model no admission probability at all.
 
 ---
 
-## Slide 5 — Live product
+## Slide 6 — Trust
 
 **Headline**
-> Change the budget. Watch the route change.
+> No "Published" badge. On purpose.
 
-**On slide** — a genuine before/after of the "What changed?" panel:
+**On slide** — the three states, as three chips:
 
-```
-Budget: $5,000 → $25,000
-Funding requirement: full ride → partial
- + 10 universities now financially compatible
- − Harvard dropped out · + CityU HK entered
-```
+| **Curated** | compiled from the institution's public materials |
+| **Estimate** | our own figure, quoted from nobody |
+| **Unverified** | we don't know, so we show nothing |
 
-```
-Destination: USA + Hong Kong → South Korea
- Top match: Berea College → KAIST
- 8 options out · 6 options in
-```
+**Plus one line:**
+> A badge a judge can disprove in thirty seconds is worth less than an honest one.
 
-**Visual:** two stacked panels, real screenshots.
-
-**Speaker note (30s):** This is the requirement the case names explicitly, and it is the live demo
-moment. Changing the country turns the list over completely. Changing the budget also changes the
-funding requirement it implies — and we say so, rather than pretending nothing else moved.
+**Speaker note (25s):** Every cost is an estimate and labelled as one. Anything unverifiable stays
+null rather than becoming a plausible number. We also model whether aid is *dependable* or a contest
+you must win — which is why, for a student with $5,000, Harvard outranks TU Delft despite a $91,000
+sticker versus $37,000.
 
 ---
 
-## Slide 6 — Architecture and AI
+## Slide 7 — Architecture and AI
 
 **Headline**
 > AI enhances the product. It is not the product.
@@ -141,46 +161,48 @@ server-side.
 
 ---
 
-## Slide 7 — Why it is different
-
-**Headline**
-> Honest where others guess.
-
-**On slide** — four contrasts, two columns:
-
-| Typical tool | AdmitPath |
-| --- | --- |
-| "87% chance of admission" | Match score, explicitly not a probability |
-| Sticker price or nothing | Best-case cost after published aid |
-| Missing SAT = 0 | Missing SAT = unknown |
-| Scraped 30,000 universities | 35 curated, every record source-linked |
-
-**Speaker note (25s):** The easy version of this product invents an admission percentage and scrapes a
-huge database. We did neither, on purpose. Every cost is labelled an estimate, every requirement links
-to the official page, and unverified values are shown as unverified rather than filled in.
-
----
-
-## Slide 8 — Roadmap and close
+## Slide 8 — Proof, and what comes next
 
 **Headline**
 > From "where can I apply" to "what should I do next".
 
-**On slide** — next steps, four bullets:
-- Expand the curated dataset with the same sourcing discipline
-- Live deadline verification against official pages
-- Counsellor view: one advisor, many student routes
-- Russian and Kazakh localisation
+**On slide** — proof first, four numbers:
+
+| 124 | tests, including monotonicity and score reconstruction |
+| 0/10 | corrupt-storage cases crash the app (was 7/8) |
+| 64/64 | viewport combinations without overflow |
+| 0 | admission probabilities claimed, anywhere |
+
+**Then the path:**
+
+```
+curated dataset -> verified ingestion -> versioned cycle snapshots
+                -> same deterministic engine -> student route
+```
 
 **Closing line, large:**
 > A student should never have to ask "what do I do now?" twice.
 
-**Speaker note (20s):** What is built today works end to end and is deployed. What comes next is
-coverage and localisation — the engine already scales to whatever dataset we give it.
+**Speaker note (25s):** What is built works end to end and is deployed. What comes next is coverage and
+localisation — the engine already scores whatever dataset we give it. What we would not change is
+determinism: the moment ranking becomes a model output, nobody can answer the question a student
+actually has.
+
+---
+
+## Optional appendix slide — future scalability
+
+Only if a judge asks how this grows. Not part of the eight.
+
+- Expand the curated dataset with the same sourcing discipline, verification timestamp per field
+- Live deadline verification against official pages
+- Counsellor view: one advisor, many student routes
+- Russian and Kazakh localisation
 
 ---
 
 ## Total speaking time
 
-~3 minutes across 8 slides. If cut to 5 slides, keep **1, 2, 5, 7, 8** — problem, solution, the
-what-if proof, the honesty contrast, and the close.
+~3 minutes across 8 slides. If cut to 5, keep **1, 2, 4, 6, 8** — problem, solution, the what-if
+proof, the trust model, and the close. **Never cut slide 4**: it is the case requirement judges are
+explicitly looking for.
