@@ -177,7 +177,7 @@ server-side.
 
 **On slide** — proof first, four numbers:
 
-| 300 | tests, including monotonicity, score reconstruction and the discovery regression |
+| 325 | tests, including monotonicity, score reconstruction and the discovery regression |
 | 0/10 | corrupt-storage cases crash the app (was 7/8) |
 | 64/64 | viewport combinations without overflow |
 | 0 | admission probabilities claimed, anywhere |

@@ -179,7 +179,7 @@ src/
     ai/           AIExplanationProvider abstraction
   data/
     universities.ts   35 curated institutions, every record source-linked
-tests/            300 tests over the engine, the product guarantees and the data pipeline
+tests/            325 tests over the engine, the product guarantees and the data pipeline
 ```
 
 No component exceeds a few hundred lines, and no React file contains scoring logic.
@@ -240,7 +240,7 @@ currently carry source-backed approved fields, every record remains hand-curated
 **"Hand-curated record"** rather than implying verification that has not happened. Registry page URLs
 are `null` rather than guessed — guessing them is what produced 404ing links once already.
 
-What is proven: 176 tests covering discovery, extraction, validation and both gates, plus twelve red-team
+What is proven: 201 tests covering discovery, extraction, validation and both gates, plus twelve red-team
 scenarios — monthly housing read as annual, pages listing two academic years, domestic-only
 scholarships, stale SAT text beside current policy, documents from an old cycle, aggregator domains,
 hostile redirects, Cloudflare challenges, low confidence, blank pages, disagreeing official sources,
@@ -377,7 +377,7 @@ Verification:
 
 ```bash
 npm run typecheck   # tsc --noEmit, strict mode
-npm run test        # 300 Vitest tests
+npm run test        # 325 Vitest tests
 npm run build       # production build
 npm run verify      # all three in sequence
 npm run check:links # real HTTP check of every source URL (needs internet)
@@ -389,7 +389,7 @@ npm run data:check-freshness # broken / changed / current sources (needs interne
 
 ### Testing
 
-300 unit tests across eight suites, plus browser verification against the production build.
+325 unit tests across nine suites, plus browser verification against the production build.
 
 | Suite | Tests | What it guards |
 | --- | --- | --- |

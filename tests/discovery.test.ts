@@ -436,8 +436,12 @@ describe('Source selection: the failures a live run produced', () => {
     expect(t.audience).toBe('transfer');
     expect(f.audience).toBe('first_year');
     expect(f.score).toBeGreaterThan(t.score);
-    // A transfer page is still a real page — it is demoted, not disqualified.
-    expect(t.accepted).toBe(true);
+    // Updated from an earlier expectation that a transfer page was merely
+    // demoted. Applicant scope is now a hard gate: a transfer deadlines page is
+    // about a different population and cannot supply a first-year deadline.
+    expect(t.accepted).toBe(false);
+    expect(t.applicantScope?.scope).toBe('transfer');
+    expect(t.reasons[0]).toMatch(/written for transfer applicants/);
   });
 
   it('D: a canonical cost page outranks a blog post about cost', async () => {

@@ -251,7 +251,10 @@ const CURRENCY_SYMBOLS = {
 
 /** Per-unit wording that means a figure is NOT an annual total. */
 const PER_UNIT_PATTERNS = [
-  { re: /\bper\s+(credit|credit[- ]hour|unit|course|module)\b/i, unit: 'per-credit' },
+  // "$7,778.25 per class" was read as annual tuition in a live run, because
+  // "class" was not on this list and an unqualified figure is only a warning.
+  { re: /\bper\s+(class|course|module|subject|paper)\b/i, unit: 'per-course' },
+  { re: /\bper\s+(credit|credit[- ]hour|unit)\b/i, unit: 'per-credit' },
   { re: /\bper\s+(semester|term|trimester)\b/i, unit: 'per-semester' },
   { re: /\bper\s+(month|monthly)\b/i, unit: 'per-month' },
   { re: /\bper\s+(week|weekly)\b/i, unit: 'per-week' },
@@ -342,6 +345,119 @@ export function moneyNear(text, keywords, { withExcluded = false } = {}) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Applicant scope                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Which applicant population a page is written for.
+ *
+ * AdmitPath's records describe an ordinary **first-year undergraduate**
+ * applicant. A live run selected Harvard's "visiting undergraduate students"
+ * page as the canonical admissions source, and every field extracted from it
+ * was about a different population: a per-class fee, a visiting-student English
+ * requirement, a visiting-student testing policy. None of it was wrong about
+ * the page; all of it was wrong about our student.
+ *
+ * This is a level, not a nationality. "International" is a facet that combines
+ * with a level, so an international first-year page is still a first-year page.
+ */
+export const APPLICANT_SCOPES = [
+  'first_year',
+  'international_first_year',
+  'general_undergraduate',
+  'transfer',
+  'visiting',
+  'graduate',
+  'continuing_education',
+  'study_abroad',
+  'unknown',
+];
+
+/** Scopes that describe somebody other than our student. */
+export const EXCLUDED_SCOPES = ['transfer', 'visiting', 'graduate', 'continuing_education', 'study_abroad'];
+
+/** Scopes a first-year field may draw evidence from. */
+export const FIRST_YEAR_SCOPES = ['first_year', 'international_first_year', 'general_undergraduate', 'unknown'];
+
+/**
+ * Markers per level, most-excluding first.
+ *
+ * Order matters: "visiting undergraduate students" contains both "visiting" and
+ * "undergraduate", and the population it excludes is the one that decides.
+ */
+const SCOPE_MARKERS = [
+  ['visiting', ['visiting', 'visiting student', 'visiting students', 'visiting undergraduate',
+    'special student', 'special students', 'non degree', 'nondegree', 'non matriculated', 'guest student']],
+  ['study_abroad', ['study abroad', 'studying abroad', 'exchange student', 'exchange students',
+    'incoming exchange', 'semester abroad', 'year abroad', 'visiting exchange']],
+  ['continuing_education', ['continuing education', 'extension school', 'professional education',
+    'executive education', 'lifelong learning', 'summer school', 'part time studies', 'adult learners']],
+  ['graduate', ['graduate', 'grad', 'phd', 'doctoral', 'masters', 'mba', 'postgraduate', 'postdoctoral',
+    'graduate school', 'graduate admissions']],
+  ['transfer', ['transfer', 'transfers', 'transferring', 'transfer applicant', 'transfer applicants',
+    'transfer students']],
+  ['first_year', ['first year', 'first years', 'freshman', 'freshmen', 'first year applicant',
+    'first year applicants', 'first year students', 'entering class', 'incoming class']],
+  ['general_undergraduate', ['undergraduate', 'undergraduates', 'undergrad', 'college']],
+];
+
+const INTERNATIONAL_MARKERS = ['international', 'overseas', 'non us citizens', 'non uk', 'eu and international'];
+
+const scopeNormalise = (s) =>
+  ` ${String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()} `;
+
+const scopeHas = (hay, t) => {
+  const needle = scopeNormalise(t).trim();
+  return needle.length > 0 && hay.includes(` ${needle} `);
+};
+
+/**
+ * Classifies a page's applicant scope.
+ *
+ * Excluding levels are read only from the URL path, the title and the headings —
+ * structural places where a page declares who it is for. A first-year page that
+ * mentions transfer applicants in passing must not be reclassified by that
+ * mention, so body text can confirm an including level but can never impose an
+ * excluding one.
+ */
+export function detectApplicantScope({ url = '', title = '', headingList = [], text = '' } = {}) {
+  let path = '';
+  try { path = new URL(url).pathname; } catch { path = String(url ?? ''); }
+
+  const structural = scopeNormalise(`${path} ${title} ${headingList.slice(0, 6).join(' ')}`);
+  const body = scopeNormalise(String(text).slice(0, 20_000));
+  const markers = [];
+
+  let level = 'unknown';
+  for (const [candidate, terms] of SCOPE_MARKERS) {
+    const found = terms.filter((t) => scopeHas(structural, t));
+    if (found.length) { level = candidate; markers.push(...found); break; }
+  }
+
+  // Body text may confirm an including level, never impose an excluding one.
+  if (level === 'unknown') {
+    for (const candidate of ['first_year', 'general_undergraduate']) {
+      const terms = SCOPE_MARKERS.find(([name]) => name === candidate)[1];
+      const found = terms.filter((t) => scopeHas(body, t));
+      if (found.length) { level = candidate; markers.push(...found); break; }
+    }
+  }
+
+  const international = INTERNATIONAL_MARKERS.some((t) => scopeHas(structural, t));
+  const scope = level === 'first_year' && international ? 'international_first_year' : level;
+
+  return {
+    scope, level, international, markers: [...new Set(markers)].slice(0, 5),
+    excluded: EXCLUDED_SCOPES.includes(scope),
+  };
+}
+
+/** True when a first-year field may take evidence from a page of this scope. */
+export function scopeServesFirstYear(scope) {
+  return FIRST_YEAR_SCOPES.includes(scope);
+}
+
+/* ------------------------------------------------------------------ */
 /* Year-aware money extraction                                         */
 /* ------------------------------------------------------------------ */
 
@@ -422,6 +538,10 @@ export function extractMoneyScoped(html, keywords, { withExcluded = false } = {}
    * tuition candidate, because the sentence contains the word "tuition".
    */
   const pushNearest = (candidate, scopeText) => {
+    // The keyword must be in the figure's own sentence, not merely somewhere in
+    // the section. A "Cost of Attendance" heading used to claim every number
+    // under it, which is how a per-class fee became a total cost of attendance.
+    if (!keywordRe.test(candidate.sentence ?? '')) return;
     const mine = nearestTermDistance(scopeText, candidate.index, keywords);
     if (!Number.isFinite(mine)) return;
     const theirs = nearestTermDistance(scopeText, candidate.index, others);

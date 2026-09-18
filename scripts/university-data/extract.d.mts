@@ -3,7 +3,7 @@
 export interface MoneyCandidate {
   value: number;
   currency: string | null;
-  unit: 'per-year' | 'per-semester' | 'per-quarter' | 'per-credit' | 'per-month' | 'per-week' | 'unqualified';
+  unit: 'per-year' | 'per-semester' | 'per-quarter' | 'per-credit' | 'per-course' | 'per-month' | 'per-week' | 'unqualified';
   isAnnual: boolean;
   excerpt: string;
   /** The sentence that owns the figure; qualifiers are read from here. */
@@ -105,3 +105,36 @@ export function extractMoneyScoped(
   keywords: string[],
   opts: { withExcluded: true },
 ): { kept: MoneyCandidate[]; excluded: MoneyCandidate[] };
+
+export type ApplicantScope =
+  | 'first_year'
+  | 'international_first_year'
+  | 'general_undergraduate'
+  | 'transfer'
+  | 'visiting'
+  | 'graduate'
+  | 'continuing_education'
+  | 'study_abroad'
+  | 'unknown';
+
+export const APPLICANT_SCOPES: ApplicantScope[];
+export const EXCLUDED_SCOPES: ApplicantScope[];
+export const FIRST_YEAR_SCOPES: ApplicantScope[];
+
+export interface ApplicantScopeResult {
+  scope: ApplicantScope;
+  /** The scope with the international facet removed. */
+  level: ApplicantScope;
+  international: boolean;
+  markers: string[];
+  excluded: boolean;
+}
+
+export function detectApplicantScope(doc?: {
+  url?: string;
+  title?: string;
+  headingList?: string[];
+  text?: string;
+}): ApplicantScopeResult;
+
+export function scopeServesFirstYear(scope: string): boolean;

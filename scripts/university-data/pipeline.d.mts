@@ -50,6 +50,8 @@ export interface MissingEvidence {
   reason: string;
   url?: string;
   kind?: string;
+  /** The applicant scope of the source, when that is why the field is missing. */
+  scope?: string;
 }
 export interface ExtractionResult {
   id: string;
@@ -62,6 +64,8 @@ export interface ExtractionResult {
   noEvidence: MissingEvidence[];
   /** How many documents had site chrome stripped before extraction. */
   contentCleaned: number;
+  /** The applicant population each source was written for. */
+  sourceScopes: Array<{ kind: string; url: string; scope: string; markers: string[] }>;
 }
 export function extractFrom(
   id: string,

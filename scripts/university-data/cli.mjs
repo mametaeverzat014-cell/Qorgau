@@ -139,7 +139,7 @@ async function cmdDiscover() {
     console.log(`    ${page.url}`);
     if (page.title) console.log(c.dim(`    title:      ${page.title}`));
     console.log(`    relevance ${page.relevanceScore}  ·  authority ${page.authorityScore}  ·  final ${page.score}`);
-    console.log(`    role ${role}  ·  audience ${page.audience}  ·  ${page.temporalStatus}`
+    console.log(`    scope ${c.b(page.applicantScope?.scope ?? 'unknown')}  ·  role ${role}  ·  ${page.temporalStatus}`
       + (page.publishedDate ? c.dim(`  (published ${page.publishedDate})`) : '')
       + (page.updatedDate ? c.dim(`  (updated ${page.updatedDate})`) : ''));
     console.log(c.dim(`    why:        ${page.whySelected}`));
@@ -444,7 +444,7 @@ function cmdReview() {
     console.log(c.b('NO EVIDENCE — the sources were read and say nothing about these'));
     console.log(c.dim('  These are not proposals. Nothing changes, and the existing value stands.'));
     for (const n of proposals.noEvidence) {
-      console.log(`  ${c.dim('·')} ${n.field}`);
+      console.log(`  ${c.dim('·')} ${n.field}${n.scope ? c.y(`   [source scope: ${n.scope}]`) : ''}`);
       console.log(c.dim(`      ${n.reason}`));
       if (n.url) console.log(c.dim(`      read: ${n.url}`));
     }

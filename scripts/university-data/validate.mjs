@@ -7,6 +7,8 @@
  * outcome; a plausible wrong one is not.
  */
 
+import { FIRST_YEAR_SCOPES } from './extract.mjs';
+
 const err = (field, message) => ({ field, severity: 'error', message });
 const warn = (field, message) => ({ field, severity: 'warning', message });
 
@@ -27,8 +29,10 @@ export function validateMoneyCandidate(field, c) {
 
   // The per-unit trap. A monthly housing figure read as annual understates cost
   // of attendance roughly twelvefold and looks entirely plausible in the UI.
-  if (c.unit === 'per-credit' || c.unit === 'per-month' || c.unit === 'per-week') {
-    issues.push(err(field, `figure is quoted ${c.unit}, not annually; it cannot be used as an annual amount`));
+  if (c.unit === 'per-credit' || c.unit === 'per-course' || c.unit === 'per-month' || c.unit === 'per-week') {
+    // Annualising needs a course load or a number of weeks the page does not
+    // state. "$7,778.25 per class" became annual tuition in a live run.
+    issues.push(err(field, `figure is quoted ${c.unit}, not annually; annualising it would require a course load or term count this source does not state`));
   }
   if (c.unit === 'per-semester' || c.unit === 'per-quarter') {
     issues.push(warn(field, `figure is ${c.unit}; annualising requires knowing the number of terms, so this needs review`));
@@ -244,6 +248,43 @@ export function deriveAidFlags(signals) {
 /** Plain values, null wherever the evidence is UNKNOWN. */
 function flatten(evidence) {
   return Object.fromEntries(Object.entries(evidence).map(([k, e]) => [k, e.state === EVIDENCE.UNKNOWN ? null : e.value]));
+}
+
+/* ------------------------------------------------------------------ */
+/* Applicant scope                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Fields whose value depends on which applicant population a source describes.
+ *
+ * A visiting student's per-class fee, English requirement and testing policy
+ * are all real facts about a real page, and none of them is a fact about the
+ * first-year undergraduate our records describe.
+ */
+export const SCOPE_GUARDED_FIELDS = [
+  'tuition', 'livingCost', 'totalCostOfAttendance',
+  'minimumIELTS', 'minimumTOEFL', 'satPolicy',
+  'applicationDeadline', 'scholarshipDeadline',
+  'needBasedAidForInternationals', 'meetsFullNeedForInternationals',
+  'fullTuitionPossible', 'fullRidePossible', 'aidCertainty',
+];
+
+/**
+ * Whether a source of this applicant scope may supply this field.
+ *
+ * Deliberately independent of discovery. Discovery ranks pages; this refuses
+ * them. If a wrong-scope page reaches extraction — because discovery misjudged
+ * it, or because somebody put the URL in the registry by hand — the value still
+ * never reaches a first-year record.
+ */
+export function scopeMayServeField(field, scope) {
+  if (!SCOPE_GUARDED_FIELDS.includes(field)) return { ok: true, reason: null };
+  if (FIRST_YEAR_SCOPES.includes(scope)) return { ok: true, reason: null };
+  return {
+    ok: false,
+    reason: `the source is written for ${String(scope).replace(/_/g, ' ')} applicants; `
+      + `${field} describes a first-year undergraduate and cannot be taken from it`,
+  };
 }
 
 /* ------------------------------------------------------------------ */

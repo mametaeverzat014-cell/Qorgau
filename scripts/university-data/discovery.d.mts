@@ -2,6 +2,7 @@
 
 import type { FetchResult } from './safety.d.mts';
 import type { RegistryEntry } from './registry.d.mts';
+import type { ApplicantScopeResult } from './extract.d.mts';
 
 export function normalise(s: unknown): string;
 export function hasTerm(haystack: string, term: string): boolean;
@@ -35,6 +36,8 @@ export interface Temporal {
 export interface KindSignals {
   decisionCritical?: boolean;
   audienceSensitive?: boolean;
+  /** False for kinds that are not written for an applicant population. */
+  scopeGuarded?: boolean;
   require?: string[][];
   requireOneOf?: string[][];
   coRequire?: [string[], string[]];
@@ -79,7 +82,8 @@ export function coOccurs(
   ctx?: { title?: string; sections?: Array<{ heading?: string; body?: string }>; text?: string; windowChars?: number },
 ): { ok: boolean; where: string | null; excerpt: string | null; matched: { a: string; b: string } | null };
 export function scoreAuthority(kind: string, doc?: DocumentInput, now?: Date): {
-  score: number; reasons: string[]; role: SourceRole; blogLike: boolean; audience: Audience; temporal: Temporal;
+  score: number; reasons: string[]; role: SourceRole; blogLike: boolean;
+  audience: Audience; applicantScope: ApplicantScopeResult; temporal: Temporal;
 };
 export function candidatePriority(url: string, kind: string): {
   score: number; relevance: number; authority: number; audience: Audience; blogPath: boolean;
@@ -116,6 +120,7 @@ export interface DocumentInput {
   sections?: Array<{ heading?: string; body?: string }>;
   sitemapContext?: string;
   audience?: Audience;
+  applicantScope?: Partial<ApplicantScopeResult>;
   temporal?: Temporal;
 }
 export interface KindScore {
@@ -127,6 +132,7 @@ export interface KindScore {
   accepted: boolean;
   role?: SourceRole;
   audience?: Audience;
+  applicantScope?: ApplicantScopeResult;
   temporal?: Temporal;
   coOccurrence?: { ok: boolean; where: string | null } | null;
   reasons: string[];
@@ -146,6 +152,7 @@ export interface DiscoveredPage {
   authorityScore: number;
   sourceRole: SourceRole;
   audience: Audience;
+  applicantScope?: ApplicantScopeResult;
   temporal: Temporal;
   temporalStatus: TemporalStatus;
   publishedDate: string | null;

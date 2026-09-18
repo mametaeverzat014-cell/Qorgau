@@ -21,10 +21,11 @@ import { discoverPages, isNonContentUrl } from './discovery.mjs';
 import {
   htmlToText, pageTitle, detectAcademicYear, extractMoneyScoped, extractIELTS, extractTOEFL,
   extractTestingPolicy, extractAidPolicy, extractDeadlines, extractCommonDataSet, mainContent,
+  headings, detectApplicantScope,
 } from './extract.mjs';
 import {
   validateMoneyCandidate, validateIELTS, validateTOEFL, validateDeadline,
-  deriveAidFlags, validateRecordConsistency, verdictFor, EVIDENCE, VERDICT,
+  deriveAidFlags, validateRecordConsistency, verdictFor, scopeMayServeField, EVIDENCE, VERDICT,
 } from './validate.mjs';
 
 const dirFor = (stage, id) => join(DATA_DIR, stage, assertSafeId(id));
@@ -175,6 +176,23 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
     const year = detectAcademicYear(text);
     const st = sourceTypeFor(doc);
 
+    // Defence in depth. Discovery ranks pages by applicant scope; this refuses
+    // them. A live run put Harvard's visiting-undergraduate page through as the
+    // admissions source, and every value it yielded — a per-class fee, a
+    // visiting-student English requirement, a visiting-student testing policy —
+    // was a true fact about the wrong population. The scope is re-derived from
+    // the document itself rather than trusted from the registry.
+    doc.applicantScope = detectApplicantScope({
+      url: doc.url, title: doc.title ?? '', headingList: headings(mainHtml), text,
+    });
+    const mayServe = (field) => {
+      const verdict = scopeMayServeField(field, doc.applicantScope.scope);
+      if (!verdict.ok) {
+        noEvidence.push({ field, reason: verdict.reason, url: doc.url, kind: doc.kind, scope: doc.applicantScope.scope });
+      }
+      return verdict.ok;
+    };
+
     // Common Data Set first — the strongest source when present.
     if (doc.kind === 'common_data_set') {
       const cds = extractCommonDataSet(text);
@@ -192,6 +210,7 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
     }
 
     const pushMoney = (field, keywords) => {
+      if (!mayServe(field)) return;
       // Scoped: each figure carries the academic year its own table column, row
       // or section states, rather than the whole page's year or nothing.
       const { kept, excluded } = extractMoneyScoped(mainHtml, keywords, { withExcluded: true });
@@ -214,7 +233,8 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
       pushMoney('livingCost', ['housing', 'room and board', 'living', 'accommodation', 'residence']);
       pushMoney('totalCostOfAttendance', ['total', 'cost of attendance', 'estimated cost']);
     }
-    if (doc.kind === 'english_requirements' || doc.kind === 'international_admissions' || doc.kind === 'admissions') {
+    if ((doc.kind === 'english_requirements' || doc.kind === 'international_admissions' || doc.kind === 'admissions')
+        && mayServe('minimumIELTS') && mayServe('minimumTOEFL')) {
       for (const c of extractIELTS(text)) {
         candidates.minimumIELTS ??= [];
         candidates.minimumIELTS.push({ ...c, evidence: evidenceFrom(doc, st, { excerpt: c.excerpt }), confidence: c.kind === 'overall' ? 0.9 : 0.4 });
@@ -224,7 +244,7 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
         candidates.minimumTOEFL.push({ ...c, evidence: evidenceFrom(doc, st, { excerpt: c.excerpt }), confidence: 0.85 });
       }
     }
-    if (doc.kind === 'testing_policy' || doc.kind === 'admissions') {
+    if ((doc.kind === 'testing_policy' || doc.kind === 'admissions') && mayServe('satPolicy')) {
       const p = extractTestingPolicy(text);
       if (p.policy) {
         candidates.satPolicy ??= [];
@@ -237,7 +257,8 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
         notes.push(`${doc.kind}: conflicting testing-policy statements on one page; left unresolved`);
       }
     }
-    if (doc.kind === 'deadlines' || doc.kind === 'admissions' || doc.kind === 'scholarships') {
+    if ((doc.kind === 'deadlines' || doc.kind === 'admissions' || doc.kind === 'scholarships')
+        && mayServe('applicationDeadline') && mayServe('scholarshipDeadline')) {
       const ds = extractDeadlines(text);
       // Only create a field group when there is something in it. An empty group
       // is worse than no group: it reports "2 field groups extracted" while
@@ -250,7 +271,8 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
         candidates[field].push(...rows);
       }
     }
-    if (doc.kind === 'financial_aid' || doc.kind === 'international_financial_aid' || doc.kind === 'scholarships') {
+    if ((doc.kind === 'financial_aid' || doc.kind === 'international_financial_aid' || doc.kind === 'scholarships')
+        && mayServe('aidCertainty')) {
       const signals = extractAidPolicy(text);
       const { flags, evidence, issues } = deriveAidFlags(signals);
       // Only fields the page actually speaks to become candidates. A field the
@@ -278,8 +300,16 @@ export function extractFrom(id, manifest, { log = console.log } = {}) {
     id, extractedAt: new Date().toISOString(), candidates, notes,
     excludedFigures, noEvidence,
     contentCleaned: docs.filter((d) => d.contentCleaned).length,
+    sourceScopes: docs.filter((d) => !d.isPdf).map((d) => ({
+      kind: d.kind, url: d.url, scope: d.applicantScope?.scope ?? 'unknown',
+      markers: d.applicantScope?.markers ?? [],
+    })),
   };
   writeFileSync(join(outDir, 'candidates.json'), JSON.stringify(out, null, 2) + '\n');
+  const wrongScope = out.sourceScopes.filter((x) => !['first_year', 'international_first_year', 'general_undergraduate', 'unknown'].includes(x.scope));
+  if (wrongScope.length) {
+    for (const x of wrongScope) log(`  ${x.kind}: source is written for ${x.scope.replace(/_/g, ' ')} applicants; first-year fields refused`);
+  }
   log(`  extracted ${Object.keys(candidates).length} field groups, ${excludedFigures.length} figures excluded by context, ${noEvidence.length} fields with no evidence, ${notes.length} notes`);
   return out;
 }

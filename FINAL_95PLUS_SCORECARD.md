@@ -109,7 +109,7 @@ Verification is automated-browser and manual, not a persistent CI pipeline — a
 - The AI layer sits behind `AIExplanationProvider`, is only reachable from a button, may only rephrase
   what the engine already produced, and is proven to fall back on four distinct failure paths. The key
   is read only server-side.
-- 300 tests across eight purpose-separated suites. TypeScript strict. Zero-config deployment, no
+- 325 tests across nine purpose-separated suites. TypeScript strict. Zero-config deployment, no
   database, no auth.
 
 **Remaining weakness**

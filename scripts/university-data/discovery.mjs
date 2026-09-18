@@ -27,6 +27,7 @@
 
 import {
   htmlToText, pageTitle, headings, detectAcademicYear, mainContent, headingSections,
+  detectApplicantScope, scopeServesFirstYear,
 } from './extract.mjs';
 import { safeFetch, isAllowedUrl, looksLikeChallenge, hostMatchesDomain, LIMITS } from './safety.mjs';
 
@@ -462,10 +463,31 @@ const AUDIENCE_AUTHORITY = {
   international: 1,
   unknown: 0,
   transfer: -4,
+  visiting: -8,
+  study_abroad: -8,
+  continuing_education: -8,
   graduate: -7,
 };
 const AUDIENCE_RANK = {
-  first_year: 5, all_undergraduate: 4, international: 4, unknown: 3, transfer: 1, graduate: 0,
+  first_year: 5, all_undergraduate: 4, international: 4, unknown: 3,
+  transfer: 1, visiting: 0, study_abroad: 0, continuing_education: 0, graduate: 0,
+};
+
+/**
+ * Applicant scope outranks keyword density and freshness, by design.
+ *
+ * A live run picked Harvard's visiting-undergraduate page over its first-year
+ * page because the visiting page was keyword-rich and carried a date. Which
+ * population a page is about is categorical, not a quality gradient: no amount
+ * of keyword density makes a visiting-student page a first-year source.
+ *
+ * Only an *explicitly* first-year page jumps the queue. A page that says
+ * nothing about its population ties with one that says "undergraduate", so
+ * score still decides between them and a rich page is not demoted by silence.
+ */
+const SCOPE_RANK = {
+  first_year: 2, international_first_year: 2,
+  general_undergraduate: 1, unknown: 1,
 };
 const ROLE_RANK = { canonical: 3, supporting: 2, fallback: 1, historical: 0 };
 
@@ -542,14 +564,16 @@ const segmentHits = (segments, terms, { prefix = false } = {}) => {
  * partial one. Note that normalisation is word-shaped, so "undergraduate" does
  * not match the "graduate" term.
  */
-export function detectAudience({ url = '', title = '', headingList = [] } = {}) {
-  const hay = normalise(`${pathOf(url)} ${title} ${headingList.slice(0, 3).join(' ')}`);
-  if (hits(hay, ['transfer', 'transfers', 'transferring', 'transfer applicants']).length) return 'transfer';
-  if (hits(hay, ['graduate', 'grad', 'phd', 'doctoral', 'masters', 'mba', 'postgraduate']).length) return 'graduate';
-  if (hits(hay, ['first year', 'first years', 'freshman', 'freshmen', 'first year applicants']).length) return 'first_year';
-  if (hits(hay, ['undergraduate', 'undergraduates', 'undergrad']).length) return 'all_undergraduate';
-  if (hits(hay, ['international', 'overseas']).length) return 'international';
-  return 'unknown';
+export function detectAudience(doc = {}) {
+  const { scope, international } = detectApplicantScope(doc);
+  if (scope === 'transfer') return 'transfer';
+  if (scope === 'graduate') return 'graduate';
+  if (scope === 'visiting') return 'visiting';
+  if (scope === 'continuing_education') return 'continuing_education';
+  if (scope === 'study_abroad') return 'study_abroad';
+  if (scope === 'first_year' || scope === 'international_first_year') return 'first_year';
+  if (scope === 'general_undergraduate') return 'all_undergraduate';
+  return international ? 'international' : 'unknown';
 }
 
 /* ------------------------------------------------------------------ */
@@ -726,7 +750,8 @@ export function scoreAuthority(kind, doc = {}, now = new Date()) {
   }
   const blogLike = p.blogPath || blogMarkers.length > 0;
 
-  const audience = doc.audience ?? detectAudience({ url, title, headingList });
+  const applicantScope = doc.applicantScope ?? detectApplicantScope({ url, title, headingList, text });
+  const audience = doc.audience ?? detectAudience({ url, title, headingList, text });
   const signals = KIND_SIGNALS[kind] ?? {};
   if (signals.audienceSensitive) {
     const adj = AUDIENCE_AUTHORITY[audience] ?? 0;
@@ -757,7 +782,7 @@ export function scoreAuthority(kind, doc = {}, now = new Date()) {
     reasons.push(`"${calculator[0]}" page stating no figures — supporting at most`);
   }
 
-  return { score: Number(score.toFixed(2)), reasons, role, blogLike, audience, temporal };
+  return { score: Number(score.toFixed(2)), reasons, role, blogLike, audience, applicantScope, temporal };
 }
 
 /**
@@ -831,10 +856,26 @@ export function scoreKind(kind, doc = {}, now = new Date()) {
   const hayContext = normalise(sitemapContext);
   const corpus = `${hayTitle}${hayHeadings}${hayText}${hayPath}`;
 
+  const applicantScope = doc.applicantScope
+    ?? detectApplicantScope({ url, title, headingList, text });
+
   const fail = (reason) => ({
     kind, score: 0, relevance: 0, authority: 0, content: 0, accepted: false, reasons: [reason],
-    role: 'fallback', audience: 'unknown', temporal: { temporalStatus: 'unknown' },
+    role: 'fallback', audience: detectAudience({ url, title, headingList, text }),
+    applicantScope, temporal: { temporalStatus: 'unknown' },
   });
+
+  // Applicant scope is a hard gate, not a penalty. Our records describe a
+  // first-year undergraduate; a page written for visiting, transfer, graduate,
+  // continuing-education or study-abroad applicants is about somebody else, and
+  // no keyword score makes it evidence about our student.
+  if (signals.scopeGuarded !== false && !scopeServesFirstYear(applicantScope.scope)) {
+    return fail(
+      `written for ${applicantScope.scope.replace(/_/g, ' ')} applicants`
+      + `${applicantScope.markers.length ? ` ("${applicantScope.markers[0]}")` : ''}`
+      + ', not first-year undergraduates',
+    );
+  }
 
   const hard = hits(corpus, signals.hardNegative ?? []);
   if (hard.length) return fail(`disqualified: "${hard[0]}" is not this kind of page`);
@@ -891,7 +932,7 @@ export function scoreKind(kind, doc = {}, now = new Date()) {
     weigh(contextHits) * WEIGHTS.sitemap +
     negatives.length * WEIGHTS.negative;
 
-  const auth = scoreAuthority(kind, doc, now);
+  const auth = scoreAuthority(kind, { ...doc, applicantScope }, now);
   const score = relevance + auth.score;
 
   const reasons = [];
@@ -920,6 +961,7 @@ export function scoreKind(kind, doc = {}, now = new Date()) {
     accepted,
     role: auth.role,
     audience: auth.audience,
+    applicantScope,
     temporal: auth.temporal,
     coOccurrence,
     reasons,
@@ -946,7 +988,9 @@ export function classifyDocument(doc, now = new Date()) {
  * score, for the case where two pages are otherwise identical.
  */
 export function compareCandidates(a, b) {
+  const scope = (x) => SCOPE_RANK[x.applicantScope?.scope ?? x.scope] ?? 1;
   return (ROLE_RANK[b.role] ?? 0) - (ROLE_RANK[a.role] ?? 0)
+    || scope(b) - scope(a)
     || b.score - a.score
     || (AUDIENCE_RANK[b.audience] ?? 3) - (AUDIENCE_RANK[a.audience] ?? 3);
 }
@@ -956,6 +1000,11 @@ export function whyItWon(winner, loser) {
   if (!loser) return 'no other candidate qualified';
   if ((ROLE_RANK[winner.role] ?? 0) !== (ROLE_RANK[loser.role] ?? 0)) {
     return `${winner.role} source outranks ${loser.role}`;
+  }
+  const ws = winner.applicantScope?.scope ?? winner.scope ?? 'unknown';
+  const ls = loser.applicantScope?.scope ?? loser.scope ?? 'unknown';
+  if ((SCOPE_RANK[ws] ?? 1) !== (SCOPE_RANK[ls] ?? 1)) {
+    return `written for ${ws.replace(/_/g, ' ')} applicants rather than ${ls.replace(/_/g, ' ')}`;
   }
   if (winner.score !== loser.score) {
     const wt = winner.temporal?.temporalStatus ?? 'unknown';

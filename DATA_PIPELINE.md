@@ -512,6 +512,108 @@ does not say" is a different answer from "we read a value and refused it".
 
 ---
 
+---
+
+## Applicant scope
+
+Every record in the dataset describes one kind of student: an **ordinary
+first-year undergraduate applicant**. Until this guard existed, nothing in the
+pipeline knew that.
+
+### What went wrong
+
+A live Harvard run selected
+
+```
+/admissions/apply/visiting-undergraduate-students
+```
+
+as the canonical `admissions` source. The first-year page was discovered and
+lost — the visiting page was keyword-rich and carried a date. Everything
+extracted downstream was a true fact about the wrong population:
+
+| field | value taken | what it actually was |
+| --- | --- | --- |
+| `tuition` | 7778.25 USD | a visiting student's fee **per class** |
+| `livingCost` | 11600 | a visiting student's housing for one term |
+| `totalCostOfAttendance` | 7778.25 | the same per-class fee, under a "Cost of Attendance" heading |
+| `minimumIELTS` | 6 | the visiting-student English requirement |
+| `satPolicy` | — | evidence drawn from the visiting-student page |
+
+Three separate defects: no notion of applicant population; `per class` was not a
+recognised unit; and a heading was allowed to make any figure beneath it a total.
+
+### The scopes
+
+| scope | serves first-year fields |
+| --- | --- |
+| `first_year` | yes |
+| `international_first_year` | yes |
+| `general_undergraduate` | yes |
+| `unknown` | yes |
+| `transfer` | **no** |
+| `visiting` | **no** |
+| `graduate` | **no** |
+| `continuing_education` | **no** |
+| `study_abroad` | **no** |
+
+`unknown` serves, deliberately: most pages never state a population, and
+refusing them would find nothing. What is refused is a page that *declares* it
+is for somebody else.
+
+International is a **facet, not a level**. A page for international first-year
+applicants is `international_first_year` and is fully eligible; a page that says
+"international" and nothing about level is `unknown` and also eligible. Nothing
+is excluded for being international.
+
+### How a page is classified
+
+From the URL path, the title and the headings — the structural places a page
+declares who it is for — using the cleaned main content, not the template. The
+excluding levels are checked first, because `visiting-undergraduate-students`
+contains both "visiting" and "undergraduate" and the population it excludes is
+the one that decides.
+
+Body text may *confirm* an including level but can never *impose* an excluding
+one, so a first-year page that mentions transfer applicants in passing stays a
+first-year page.
+
+### Where it is enforced
+
+**Twice, independently.**
+
+In **discovery**, scope is a hard gate, not a penalty: a wrong-scope page is
+never an accepted candidate for a guarded kind, whatever it scores. Among
+eligible pages, scope sorts above the score — an explicitly first-year page
+beats an undated one that merely scores higher, which is the ordering the live
+failure inverted. Only an explicitly first-year page jumps the queue;
+`general_undergraduate` and `unknown` tie, so a rich page is never demoted for
+saying nothing.
+
+In **extraction**, the scope is re-derived from the fetched document itself and
+checked again per field. Discovery ranks pages; extraction refuses them. If a
+wrong-scope page reaches extraction — because discovery misjudged it, or because
+somebody put the URL in the registry by hand — the value still never reaches a
+first-year record. It appears under **NO EVIDENCE** with the source's scope.
+
+Guarded fields: tuition, living cost, total cost of attendance, IELTS, TOEFL,
+SAT policy, both deadlines and every aid field. `programs` and
+`common_data_set` are not guarded — a Common Data Set is not written for an
+applicant population at all.
+
+### Units and totals
+
+`per class`, `per course`, `per module` and `per subject` are now recognised as
+per-course pricing, and a per-course figure is a **hard error** rather than a
+warning: annualising it needs a course load the page does not state. Per-credit,
+per-month and per-week were already refused this way.
+
+A total cost of attendance must be stated in the figure's **own sentence**. A
+"Cost of Attendance" heading no longer claims every number beneath it, which is
+how a per-class fee became a total.
+
+---
+
 ## Commands
 
 ```bash
@@ -612,7 +714,7 @@ Consequently:
   does not propose a replacement from memory and does not edit the dataset. A
   variant that responds is a lead, not a confirmation.
 
-What is proven: 176 tests exercise discovery, extraction, validation, the security
+What is proven: 201 tests exercise discovery, extraction, validation, the security
 gate and the approval gate, including an end-to-end fixture run from HTML through to a
 verdict. Twelve red-team scenarios — monthly housing, mixed academic years,
 domestic-only scholarships, stale SAT policy text, old PDFs, aggregator domains,
@@ -637,12 +739,16 @@ access. Nothing else is required.
    blog host whose name contains the institution's acronym. Fixtures are not
    the internet. From this environment every request to a university domain
    returns HTTP 403 at the egress proxy, so the next live run is the real test.
-3. **Each institution starts with one allowed domain.** Real institutions spread
+3. **Applicant scope is classified from words, not from a schema.** A page that
+   declares its population in a way none of the markers cover is read as
+   `unknown`, which means it is eligible. The guard removes a category of wrong
+   answer; it does not guarantee every page is correctly typed.
+4. **Each institution starts with one allowed domain.** Real institutions spread
    admissions, the registrar, student financial services and institutional
    research across several. Until a person approves the others with
    `data:add-domain`, discovery cannot see them — which is a deliberate
    trade: a narrow allow-list finds less and invents nothing.
-4. **No LLM extraction layer.** The optional-LLM design in the brief is
+5. **No LLM extraction layer.** The optional-LLM design in the brief is
    deliberately not implemented: every field the engine scores on can be parsed
    deterministically, and adding a model would introduce a candidate source that
    cannot be audited for no accuracy gain.

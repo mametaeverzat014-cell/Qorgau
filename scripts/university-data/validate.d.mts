@@ -57,6 +57,12 @@ export function deriveAidFlags(signals: AidSignals): {
   issues: Issue[];
 };
 
+export const SCOPE_GUARDED_FIELDS: string[];
+export function scopeMayServeField(
+  field: string,
+  scope: string,
+): { ok: boolean; reason: string | null };
+
 export function validateRecordConsistency(rec: Record<string, unknown>): Issue[];
 
 export const VERDICT: {
