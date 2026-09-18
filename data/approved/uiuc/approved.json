@@ -1,0 +1,31 @@
+{
+  "id": "uiuc",
+  "fields": {
+    "satPolicy": {
+      "value": "optional",
+      "status": "verified",
+      "evidence": [
+        {
+          "url": "https://www.admissions.illinois.edu/first-year-apply-faq/",
+          "title": "First-Year Apply FAQ | Undergraduate Admissions | Illinois",
+          "retrievedAt": "2026-09-18T12:43:47.896Z",
+          "sourceType": "official_web",
+          "contentHash": "66402d29f45eb9e9a27d1a6f3d4146341bd9703ea9506a7bda9c695bfa99589f",
+          "excerpt": "our office to explain your situation and receive more details. You’ll need to send a copy of your high school equivalency exam to our office. Test-Optional Is the ACT or SAT optional for all first-year applicants? Yes, ACT/SAT scores are optional for all first-year applicants, including international s"
+        }
+      ],
+      "confidence": 0.9,
+      "approvedAt": "2026-09-18T13:58:09.450Z",
+      "approvedBy": "alsana"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-18T13:58:09.450Z",
+      "approved": [
+        "satPolicy"
+      ],
+      "refused": []
+    }
+  ]
+}

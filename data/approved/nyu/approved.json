@@ -1,0 +1,49 @@
+{
+  "id": "nyu",
+  "fields": {
+    "minimumIELTS": {
+      "value": 7.5,
+      "status": "verified",
+      "evidence": [
+        {
+          "url": "https://www.nyu.edu/admissions/undergraduate-admissions/how-to-apply/standardized-tests/english-language-testing.html",
+          "title": "English Language Testing",
+          "retrievedAt": "2026-09-18T12:42:32.335Z",
+          "sourceType": "official_web",
+          "contentHash": "0007bed082067db2cb795a2e90a52a2bf75acb25660d5206485c18fe3fbc4578",
+          "excerpt": "5 or above (overall score and subscores) on the TOEFL iBT taken on or after January 21, 2026. 135 and above on the Duolingo English Test 7.5 and above on the IELTS Academic 70 and above on the PTE Academic 191 and above on the Cambridge English Scale Am I Required to Interview with NYU? No. NYU d"
+        }
+      ],
+      "confidence": 0.9,
+      "approvedAt": "2026-09-18T13:58:09.310Z",
+      "approvedBy": "alsana"
+    },
+    "satPolicy": {
+      "value": "optional",
+      "status": "verified",
+      "evidence": [
+        {
+          "url": "https://www.nyu.edu/admissions/undergraduate-admissions/how-to-apply/standardized-tests.html",
+          "title": "Standardized Tests",
+          "retrievedAt": "2026-09-18T12:42:31.365Z",
+          "sourceType": "official_web",
+          "contentHash": "cdd4d1c14663ed45425cd87840ab42af6ddf9e1af4b944f4d2374b1582db12cd",
+          "excerpt": "Standardized Testing Policy NYU will continue to remain test-optional through the 2027-2028 application cycle. For students who elect to submit testing as part of their application, NYU has one of the most flexible testing polici"
+        }
+      ],
+      "confidence": 0.9,
+      "approvedAt": "2026-09-18T13:58:09.311Z",
+      "approvedBy": "alsana"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-18T13:58:09.311Z",
+      "approved": [
+        "minimumIELTS",
+        "satPolicy"
+      ],
+      "refused": []
+    }
+  ]
+}

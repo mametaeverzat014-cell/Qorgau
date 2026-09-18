@@ -1,0 +1,31 @@
+{
+  "id": "stanford",
+  "fields": {
+    "satPolicy": {
+      "value": "required",
+      "status": "verified",
+      "evidence": [
+        {
+          "url": "https://admission.stanford.edu/apply/first-year/testing.html",
+          "title": "Standardized Testing : Stanford University",
+          "retrievedAt": "2026-09-18T12:41:22.812Z",
+          "sourceType": "official_web",
+          "contentHash": "1b907788c4f7acb4057d6c2c658e8612bfaf13043f810136656816c59762d2b9",
+          "excerpt": "at can highlight academic preparedness. Please review the information below to learn more about our testing requirements and reporting procedures. ACT/SAT ACT or SAT scores are required. Please self-report your highest ACT and/or SAT scores in the testing section of the application. You do not need to have official scores sent to Stanford"
+        }
+      ],
+      "confidence": 0.9,
+      "approvedAt": "2026-09-18T13:58:09.173Z",
+      "approvedBy": "alsana"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-18T13:58:09.173Z",
+      "approved": [
+        "satPolicy"
+      ],
+      "refused": []
+    }
+  ]
+}

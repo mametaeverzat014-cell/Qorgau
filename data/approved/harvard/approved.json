@@ -8,20 +8,27 @@
         {
           "url": "https://college.harvard.edu/admissions/apply/application-requirements",
           "title": "Application Requirements | Harvard",
-          "retrievedAt": "2026-09-18T05:58:01.314Z",
+          "retrievedAt": "2026-09-18T12:36:09.526Z",
           "sourceType": "official_web",
-          "contentHash": "6e039df4c70697bec9e9d3bc9723b307cad84e78e6dacd5fc984bd06a27db97b",
+          "contentHash": "bc9596e180f8e901510a761475fee93c44bde092115f9f5c40ac62ecf1f292bd",
           "excerpt": "sults by mid-August. We are unable to accept a transcript as an email attachment. Standardized Test Scores Harvard requires the SAT or ACT to meet its standardized testing requirement. In exceptional cases when those tests are not accessible, one of the following can meet the requirement: AP exa"
         }
       ],
       "confidence": 0.9,
-      "approvedAt": "2026-09-18T06:04:39.762Z",
+      "approvedAt": "2026-09-18T13:58:08.883Z",
       "approvedBy": "alsana"
     }
   },
   "history": [
     {
       "at": "2026-09-18T06:04:39.762Z",
+      "approved": [
+        "satPolicy"
+      ],
+      "refused": []
+    },
+    {
+      "at": "2026-09-18T13:58:08.884Z",
       "approved": [
         "satPolicy"
       ],

@@ -8,20 +8,27 @@
         {
           "url": "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
           "title": "Deadlines &#038; requirements | MIT Admissions",
-          "retrievedAt": "2026-09-18T05:39:35.914Z",
+          "retrievedAt": "2026-09-18T12:37:19.082Z",
           "sourceType": "official_web",
           "contentHash": "7a9d42368fb1ab361e8daec116dd7d307e37a8404822ce6298f1c963ff8d77e0",
           "excerpt": "application. We recommend one letter from a math or science teacher, and one from a humanities, social science, or language teacher. Standardized tests : We require the SAT or ACT. Applicants must take required tests before November 30 for EA, and before December 31 for RA. English proficiency exams are strongly recommended for certai"
         }
       ],
       "confidence": 0.9,
-      "approvedAt": "2026-09-18T05:40:20.192Z",
+      "approvedAt": "2026-09-18T13:58:09.030Z",
       "approvedBy": "alsana"
     }
   },
   "history": [
     {
       "at": "2026-09-18T05:40:20.192Z",
+      "approved": [
+        "satPolicy"
+      ],
+      "refused": []
+    },
+    {
+      "at": "2026-09-18T13:58:09.031Z",
       "approved": [
         "satPolicy"
       ],

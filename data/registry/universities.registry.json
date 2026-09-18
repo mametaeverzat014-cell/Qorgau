@@ -33,7 +33,7 @@
       },
       "discovery": {
         "status": "partial",
-        "lastAttemptedAt": "2026-09-18T05:57:59.401Z",
+        "lastAttemptedAt": "2026-09-18T12:36:07.917Z",
         "notes": "51 requests, 33 pages classified, 10/12 kinds found"
       }
     },
@@ -67,7 +67,7 @@
       },
       "discovery": {
         "status": "partial",
-        "lastAttemptedAt": "2026-09-18T05:39:34.968Z",
+        "lastAttemptedAt": "2026-09-18T12:37:18.429Z",
         "notes": "58 requests, 29 pages classified, 9/12 kinds found"
       }
     },
@@ -86,23 +86,23 @@
       ],
       "officialRootUrl": "https://admission.princeton.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
+        "admissions": "https://admission.princeton.edu/apply",
+        "international_admissions": "https://admission.princeton.edu/apply/international-students",
         "tuition": null,
         "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
+        "financial_aid": "https://admission.princeton.edu/apply/international-students",
+        "international_financial_aid": "https://admission.princeton.edu/apply/international-students",
         "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "testing_policy": "https://admission.princeton.edu/apply/standardized-testing",
+        "english_requirements": "https://admission.princeton.edu/apply/international-students",
+        "deadlines": "https://admission.princeton.edu/apply/standardized-testing",
+        "programs": "https://admission.princeton.edu/academics",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:38:27.071Z",
+        "notes": "46 requests, 4 pages classified, 8/12 kinds found"
       }
     },
     {
@@ -120,23 +120,23 @@
       ],
       "officialRootUrl": "https://admissions.yale.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
+        "admissions": "https://admissions.yale.edu/apply",
+        "international_admissions": "https://admissions.yale.edu/international",
+        "tuition": "https://admissions.yale.edu/affordability",
+        "cost_of_attendance": "https://admissions.yale.edu/estimate-your-cost",
+        "financial_aid": "https://admissions.yale.edu/affordability",
+        "international_financial_aid": "https://admissions.yale.edu/international",
         "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
+        "testing_policy": "https://admissions.yale.edu/international",
+        "english_requirements": "https://admissions.yale.edu/international",
+        "deadlines": "https://admissions.yale.edu/apply",
         "programs": null,
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:39:45.505Z",
+        "notes": "48 requests, 5 pages classified, 9/12 kinds found"
       }
     },
     {
@@ -154,23 +154,23 @@
       ],
       "officialRootUrl": "https://admission.stanford.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
+        "admissions": "https://admission.stanford.edu/apply/first-year/fee.html",
+        "international_admissions": "https://admission.stanford.edu/apply/international/index.html",
         "tuition": null,
         "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
+        "financial_aid": "https://admission.stanford.edu/apply/veterans/aid.html",
+        "international_financial_aid": "https://admission.stanford.edu/apply/international/index.html",
         "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
+        "testing_policy": "https://admission.stanford.edu/apply/first-year/testing.html",
+        "english_requirements": "https://admission.stanford.edu/apply/first-year/testing.html",
+        "deadlines": "https://admission.stanford.edu/apply/first-year/testing.html",
         "programs": null,
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:41:17.223Z",
+        "notes": "47 requests, 10 pages classified, 7/12 kinds found"
       }
     },
     {
@@ -188,23 +188,23 @@
       ],
       "officialRootUrl": "https://www.nyu.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
+        "admissions": "https://www.nyu.edu/admissions/undergraduate-admissions/how-to-apply/international-applicants.html",
+        "international_admissions": "https://www.nyu.edu/admissions/undergraduate-admissions/how-to-apply/international-applicants.html",
+        "tuition": "https://www.nyu.edu/employees/benefit/tuition-remission.html",
+        "cost_of_attendance": "https://www.nyu.edu/about/policies-guidelines-compliance/policies-and-guidelines/cost-sharing-policy.html",
+        "financial_aid": "https://www.nyu.edu/admissions/financial-aid-and-scholarships/aid-for-current-students/additional-funding-and-procedures.html",
         "international_financial_aid": null,
-        "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
+        "scholarships": "https://www.nyu.edu/academics/awards-and-highlights/global-awards/scholarships/udall-scholarship.html",
+        "testing_policy": "https://www.nyu.edu/admissions/undergraduate-admissions/how-to-apply/standardized-tests.html",
+        "english_requirements": "https://www.nyu.edu/admissions/undergraduate-admissions/how-to-apply/standardized-tests/english-language-testing.html",
+        "deadlines": "https://www.nyu.edu/life/events-traditions/nyu-welcome/deadlines-and-dates.html",
         "programs": null,
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:42:25.943Z",
+        "notes": "47 requests, 45 pages classified, 9/12 kinds found"
       }
     },
     {
@@ -222,23 +222,23 @@
       ],
       "officialRootUrl": "https://admissions.illinois.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
+        "admissions": "https://www.admissions.illinois.edu/apply/application-help/how-admissions-works/decisions/",
+        "international_admissions": "https://www.admissions.illinois.edu/international-admitted-faq/",
+        "tuition": "https://www.admissions.illinois.edu/tuition/",
+        "cost_of_attendance": "https://www.admissions.illinois.edu/financial-aid-notification/",
+        "financial_aid": "https://www.admissions.illinois.edu/financial-aid-notification/",
         "international_financial_aid": null,
-        "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "scholarships": "https://www.admissions.illinois.edu/scholarships/",
+        "testing_policy": "https://www.admissions.illinois.edu/first-year-apply-faq/",
+        "english_requirements": "https://www.admissions.illinois.edu/first-year-apply-faq/",
+        "deadlines": "https://www.admissions.illinois.edu/first-year-dates/",
+        "programs": "https://www.admissions.illinois.edu/majors-academics/",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:43:42.136Z",
+        "notes": "49 requests, 25 pages classified, 10/12 kinds found"
       }
     },
     {
@@ -256,23 +256,23 @@
       ],
       "officialRootUrl": "https://www.admissions.purdue.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
+        "admissions": "https://admissions.purdue.edu/admission-counselors/charles-chip-timmons/",
+        "international_admissions": "https://admissions.purdue.edu/become-student/international/",
         "tuition": null,
         "cost_of_attendance": null,
-        "financial_aid": null,
+        "financial_aid": "https://admissions.purdue.edu/cost-financial-aid/",
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://admissions.purdue.edu/cost-financial-aid/scholarships/",
         "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "english_requirements": "https://admissions.purdue.edu/become-student/english-proficiency/",
+        "deadlines": "https://admissions.purdue.edu/become-student/deadlines/",
+        "programs": "https://admissions.purdue.edu/academics/majors/",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:45:06.489Z",
+        "notes": "43 requests, 16 pages classified, 7/12 kinds found"
       }
     },
     {
@@ -290,23 +290,23 @@
       ],
       "officialRootUrl": "https://admission.asu.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "admissions": "https://admission.asu.edu/apply/first-year/admission",
+        "international_admissions": "https://admission.asu.edu/apply/international/first-year",
+        "tuition": "https://admission.asu.edu/cost-aid",
+        "cost_of_attendance": "https://admission.asu.edu/cost-aid/international",
+        "financial_aid": "https://admission.asu.edu/cost-aid",
+        "international_financial_aid": "https://admission.asu.edu/cost-aid/international",
+        "scholarships": "https://admission.asu.edu/apply/first-year/admitted",
+        "testing_policy": "https://admission.asu.edu/apply/first-year/admission",
+        "english_requirements": "https://admission.asu.edu/apply/international/undergrad/english-proficiency",
+        "deadlines": "https://admission.asu.edu/apply/first-year/admitted",
+        "programs": "https://admission.asu.edu/academics/accelerated-programs",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:46:14.100Z",
+        "notes": "47 requests, 30 pages classified, 11/12 kinds found"
       }
     },
     {
@@ -324,23 +324,23 @@
       ],
       "officialRootUrl": "https://www.berea.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
-        "testing_policy": null,
+        "admissions": "https://www.berea.edu/admissions/admission-information/apply",
+        "international_admissions": "https://www.berea.edu/admissions/admission-information/apply/checklist-items/international-faqs",
+        "tuition": "https://www.berea.edu/no-tuition",
+        "cost_of_attendance": "https://www.berea.edu/student-financial-aid/cost-of-attendance",
+        "financial_aid": "https://www.berea.edu/financial-aid-financial-freedom",
+        "international_financial_aid": "https://www.berea.edu/admissions/admission-information/apply/checklist-items/international-faqs",
+        "scholarships": "https://www.berea.edu/academics/departments-programs/department-of-religion/rel-department-pages/scholarships-and-awards",
+        "testing_policy": "https://www.berea.edu/admissions/admission-information/test-optional-admissions",
         "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "deadlines": "https://www.berea.edu/admissions/admission-information/apply/checklist-items/first-year",
+        "programs": "https://www.berea.edu/academics/departments-programs/english/majors-and-minors",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:48:13.117Z",
+        "notes": "47 requests, 43 pages classified, 10/12 kinds found"
       }
     },
     {
@@ -364,17 +364,17 @@
         "cost_of_attendance": null,
         "financial_aid": null,
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://en.snu.ac.kr/academics/resources/scholarships",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
-        "programs": null,
+        "programs": "https://en.snu.ac.kr/academics/resources/scholarships",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:49:13.893Z",
+        "notes": "48 requests, 1 pages classified, 2/12 kinds found"
       }
     },
     {
@@ -406,9 +406,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:50:05.003Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -440,9 +440,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:51:09.281Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -474,9 +474,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:52:13.933Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -500,7 +500,7 @@
         "cost_of_attendance": null,
         "financial_aid": null,
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://airm.postech.ac.kr/airm/awards-grants.do",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
@@ -508,9 +508,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:53:13.056Z",
+        "notes": "54 requests, 8 pages classified, 1/12 kinds found"
       }
     },
     {
@@ -542,9 +542,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:54:07.008Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -562,23 +562,23 @@
       ],
       "officialRootUrl": "https://www.hku.hk",
       "pages": {
-        "admissions": null,
+        "admissions": "https://www.hku.hk/en/admission-aid",
         "international_admissions": null,
-        "tuition": null,
+        "tuition": "https://www.hku.hk/en/admission-aid/tuition-fee-scholarships",
         "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
+        "financial_aid": "https://www.hku.hk/en/admission-aid",
+        "international_financial_aid": "https://www.hku.hk/en/about-hku/university-today/international",
+        "scholarships": "https://www.hku.hk/en/admission-aid/tuition-fee-scholarships",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
-        "programs": null,
+        "programs": "https://www.hku.hk/en/academics",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:55:08.704Z",
+        "notes": "52 requests, 16 pages classified, 6/12 kinds found"
       }
     },
     {
@@ -601,18 +601,18 @@
         "tuition": null,
         "cost_of_attendance": null,
         "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
+        "international_financial_aid": "https://hkust.edu.hk/boundless/article/international-research-enrichment-track-students-who-took-their-curiosity-global",
+        "scholarships": "https://hkust.edu.hk/awards/all",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
-        "programs": null,
+        "programs": "https://hkust.edu.hk/academics",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T12:56:28.483Z",
+        "notes": "55 requests, 29 pages classified, 3/12 kinds found"
       }
     },
     {
@@ -644,9 +644,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:57:21.122Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -678,9 +678,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:58:14.633Z",
+        "notes": "48 requests, 43 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -712,9 +712,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T12:59:04.292Z",
+        "notes": "48 requests, 43 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -746,9 +746,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T13:00:04.343Z",
+        "notes": "48 requests, 4 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -780,9 +780,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "failed",
+        "lastAttemptedAt": "2026-09-18T13:00:54.259Z",
+        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
       }
     },
     {
@@ -806,17 +806,17 @@
         "cost_of_attendance": null,
         "financial_aid": null,
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://www.tum.de/aktuelles/alle-meldungen/pressemitteilungen/details/sustainability-awards-2025-des-nobel-sustainability-trust-verliehen",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
-        "programs": null,
+        "programs": "https://www.tum.de/studium/studienangebot/key-skill-programs",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:02:09.129Z",
+        "notes": "55 requests, 18 pages classified, 2/12 kinds found"
       }
     },
     {
@@ -834,13 +834,13 @@
       ],
       "officialRootUrl": "https://www.tudelft.nl",
       "pages": {
-        "admissions": null,
+        "admissions": "https://www.tudelft.nl/en/education/admission-and-application",
         "international_admissions": null,
         "tuition": null,
         "cost_of_attendance": null,
         "financial_aid": null,
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://www.tudelft.nl/onderwijs/studievoorlichting/praktische-zaken/scholarships",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
@@ -848,9 +848,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:03:02.638Z",
+        "notes": "47 requests, 4 pages classified, 2/12 kinds found"
       }
     },
     {
@@ -868,9 +868,9 @@
       ],
       "officialRootUrl": "https://www.uva.nl",
       "pages": {
-        "admissions": null,
+        "admissions": "https://www.uva.nl/en/education/admissions/admissions.html",
         "international_admissions": null,
-        "tuition": null,
+        "tuition": "https://www.uva.nl/en/education/fees-and-funding/tuition-fees/tuition-fees.html",
         "cost_of_attendance": null,
         "financial_aid": null,
         "international_financial_aid": null,
@@ -882,9 +882,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:03:57.074Z",
+        "notes": "48 requests, 4 pages classified, 2/12 kinds found"
       }
     },
     {
@@ -902,23 +902,23 @@
       ],
       "officialRootUrl": "https://www.unibocconi.it",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
+        "admissions": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs/application-and-admissions/admissions",
+        "international_admissions": "https://www.unibocconi.it/en/applying-bocconi/master-science-and-ma-programs/funding/international-applicants",
+        "tuition": "https://www.unibocconi.it/en/current-students/fees/tuition-and-fees-specialized-master-programs",
+        "cost_of_attendance": "https://www.unibocconi.it/en/current-students/funding/funding-bachelor-science-and-law-programs/cost-attendance-ay-2025-2026",
+        "financial_aid": "https://www.unibocconi.it/en/current-students/funding",
+        "international_financial_aid": "https://www.unibocconi.it/en/applying-bocconi/master-science-and-ma-programs/funding/international-applicants",
+        "scholarships": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs/funding/isu-bocconi-scholarship-first-year-students-ay-2026-27",
         "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "english_requirements": "https://www.unibocconi.it/en/applying-bocconi/master-science-and-ma-programs/application-and-admissions/language-requirements-mscma-programs",
+        "deadlines": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs/funding/deadlines-and-procedure-ay-2027-28",
+        "programs": "https://www.unibocconi.it/en/undergraduate-programs-english-requirements",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:05:05.939Z",
+        "notes": "58 requests, 45 pages classified, 10/12 kinds found"
       }
     },
     {
@@ -936,23 +936,23 @@
       ],
       "officialRootUrl": "https://www.ceu.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
+        "admissions": "https://www.ceu.edu/admissions",
+        "international_admissions": "https://www.ceu.edu/academics/degrees/ma-international-public-affairs",
         "tuition": null,
         "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
+        "financial_aid": "https://www.ceu.edu/admissions/financial-aid/external-funding-opportunities",
+        "international_financial_aid": "https://www.ceu.edu/academics/degrees/ma-international-public-affairs",
+        "scholarships": "https://www.ceu.edu/article/2024-10-07/scholarships-european-forum-alpbach-support-intellectual-exchange-and-learning",
         "testing_policy": null,
         "english_requirements": null,
-        "deadlines": null,
+        "deadlines": "https://www.ceu.edu/admissions",
         "programs": null,
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:06:20.907Z",
+        "notes": "51 requests, 21 pages classified, 6/12 kinds found"
       }
     },
     {
@@ -971,7 +971,7 @@
       "officialRootUrl": "https://cuni.cz",
       "pages": {
         "admissions": null,
-        "international_admissions": null,
+        "international_admissions": "https://cuni.cz/UKEN-385.html",
         "tuition": null,
         "cost_of_attendance": null,
         "financial_aid": null,
@@ -984,9 +984,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:07:16.866Z",
+        "notes": "48 requests, 44 pages classified, 1/12 kinds found"
       }
     },
     {
@@ -1004,13 +1004,13 @@
       ],
       "officialRootUrl": "https://en.uw.edu.pl",
       "pages": {
-        "admissions": null,
+        "admissions": "https://en.uw.edu.pl/admissions-2015/",
         "international_admissions": null,
         "tuition": null,
         "cost_of_attendance": null,
-        "financial_aid": null,
+        "financial_aid": "https://en.uw.edu.pl/aid-to-earthquake-victims-in-turkiye-and-syria/",
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://en.uw.edu.pl/scholarships-for-outstanding-young-scientists-2025/",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
@@ -1018,9 +1018,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:08:17.800Z",
+        "notes": "46 requests, 6 pages classified, 3/12 kinds found"
       }
     },
     {
@@ -1040,10 +1040,10 @@
       "pages": {
         "admissions": null,
         "international_admissions": null,
-        "tuition": null,
+        "tuition": "https://www.unibo.it/en/study/incoming-outgoing-international-mobility/you-are-an-international-student-wishing-to-study-at-Unibo",
         "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
+        "financial_aid": "https://www.unibo.it/en/study/incoming-outgoing-international-mobility/you-are-an-international-student-wishing-to-study-at-Unibo",
+        "international_financial_aid": "https://www.unibo.it/en/university/international-outreach/international-outreach",
         "scholarships": null,
         "testing_policy": null,
         "english_requirements": null,
@@ -1052,9 +1052,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:10:06.906Z",
+        "notes": "46 requests, 2 pages classified, 3/12 kinds found"
       }
     },
     {
@@ -1072,12 +1072,12 @@
       ],
       "officialRootUrl": "https://www.ed.ac.uk",
       "pages": {
-        "admissions": null,
+        "admissions": "https://www.ed.ac.uk/jobs/apply",
         "international_admissions": null,
-        "tuition": null,
+        "tuition": "https://study.ed.ac.uk/programmes/undergraduate-fees",
         "cost_of_attendance": null,
         "financial_aid": null,
-        "international_financial_aid": null,
+        "international_financial_aid": "https://www.ed.ac.uk/new-students/international-students-hub",
         "scholarships": null,
         "testing_policy": null,
         "english_requirements": null,
@@ -1086,9 +1086,9 @@
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:11:57.304Z",
+        "notes": "48 requests, 4 pages classified, 3/12 kinds found"
       }
     },
     {
@@ -1106,23 +1106,23 @@
       ],
       "officialRootUrl": "https://www.sciencespo.fr",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
+        "admissions": "https://www.sciencespo.fr/en/admissions-and-financial-aid/international-short-programmes/",
+        "international_admissions": "https://www.sciencespo.fr/en/admissions-and-financial-aid/international-short-programmes/",
+        "tuition": "https://www.sciencespo.fr/en/admissions-and-financial-aid/tuition-fees/",
+        "cost_of_attendance": "https://www.sciencespo.fr/en/about/governance-and-budget/",
+        "financial_aid": "https://www.sciencespo.fr/en/admissions-and-financial-aid/scholarships-financial-aid/",
+        "international_financial_aid": "https://www.sciencespo.fr/en/admissions-and-financial-aid/international-short-programmes/",
+        "scholarships": "https://www.sciencespo.fr/en/admissions-and-financial-aid/scholarships-financial-aid/",
         "testing_policy": null,
-        "english_requirements": null,
+        "english_requirements": "https://www.sciencespo.fr/fr/formations/programme-echange/pre-requis-linguistiques-tests-langues/",
         "deadlines": null,
-        "programs": null,
+        "programs": "https://www.sciencespo.fr/en/admissions-and-financial-aid/international-short-programmes/",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:12:58.970Z",
+        "notes": "50 requests, 32 pages classified, 9/12 kinds found"
       }
     },
     {
@@ -1140,23 +1140,23 @@
       ],
       "officialRootUrl": "https://nyuad.nyu.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
+        "admissions": "https://nyuad.nyu.edu/en/apply/undergraduate/scholarships-and-financial-aid/apply-for-financial-aid.html",
+        "international_admissions": "https://nyuad.nyu.edu/en/apply/undergraduate/why-nyu-abu-dhabi/us-and-international-applicants.html",
         "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
+        "cost_of_attendance": "https://nyuad.nyu.edu/en/apply/undergraduate/scholarships-and-financial-aid.html",
+        "financial_aid": "https://nyuad.nyu.edu/en/apply/undergraduate/scholarships-and-financial-aid/aid-for-study-away-jterm-summer.html",
         "international_financial_aid": null,
-        "scholarships": null,
-        "testing_policy": null,
+        "scholarships": "https://nyuad.nyu.edu/en/apply/undergraduate/scholarships-and-financial-aid.html",
+        "testing_policy": "https://nyuad.nyu.edu/en/apply/undergraduate/apply/entry-requirements.html",
         "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "deadlines": "https://nyuad.nyu.edu/en/apply/undergraduate/apply/key-dates-and-deadlines.html",
+        "programs": "https://nyuad.nyu.edu/en/about/administration-and-governance/graduation-requirements-undergraduate.html",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:14:17.677Z",
+        "notes": "51 requests, 37 pages classified, 8/12 kinds found"
       }
     },
     {
@@ -1180,17 +1180,17 @@
         "cost_of_attendance": null,
         "financial_aid": null,
         "international_financial_aid": null,
-        "scholarships": null,
+        "scholarships": "https://nu.edu.kz/news-en/sixteen-nu-scholars-receive-national-awards-and-research-scholarships-2/",
         "testing_policy": null,
         "english_requirements": null,
         "deadlines": null,
-        "programs": null,
+        "programs": "https://nu.edu.kz/admissions/programs/",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T13:15:28.341Z",
+        "notes": "58 requests, 31 pages classified, 2/12 kinds found"
       }
     }
   ]

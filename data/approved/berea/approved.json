@@ -1,0 +1,31 @@
+{
+  "id": "berea",
+  "fields": {
+    "minimumIELTS": {
+      "value": 6,
+      "status": "verified",
+      "evidence": [
+        {
+          "url": "https://www.berea.edu/admissions/admission-information/apply/checklist-items/international-faqs",
+          "title": "International Applicant Info - Berea College",
+          "retrievedAt": "2026-09-18T12:48:14.584Z",
+          "sourceType": "official_web",
+          "contentHash": "aa4313150a1aff68c6d5849bcd467e5c91e2f498f09051d74c66564247d27c3b",
+          "excerpt": "FL, IELTS, SAT, ACT or Duolingo. The minimum score required for each test is: TOEFL: 520 (paper-based); 190 (computer-based); 68 (internet-based) IELTS: 6 overall, 5 in each area ACT: 19 Composite SAT: 980 Combined Score Duolingo: 95 Berea will almost never consider scores from a test taken more"
+        }
+      ],
+      "confidence": 0.9,
+      "approvedAt": "2026-09-18T13:58:09.616Z",
+      "approvedBy": "alsana"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-18T13:58:09.617Z",
+      "approved": [
+        "minimumIELTS"
+      ],
+      "refused": []
+    }
+  ]
+}
