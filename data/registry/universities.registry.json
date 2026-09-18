@@ -18,23 +18,23 @@
       ],
       "officialRootUrl": "https://college.harvard.edu",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
-        "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
-        "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "admissions": "https://college.harvard.edu/admissions/apply/application-requirements",
+        "international_admissions": "https://college.harvard.edu/admissions/apply",
+        "tuition": "https://college.harvard.edu/about/deans-messages/laundry-and-student-fees",
+        "cost_of_attendance": "https://college.harvard.edu/admissions/apply/visiting-undergraduate-students",
+        "financial_aid": "https://college.harvard.edu/financial-aid/additional-funding-procedures/managing-your-aid",
+        "international_financial_aid": "https://college.harvard.edu/admissions/apply/international-applicants",
+        "scholarships": "https://college.harvard.edu/resources/faq/how-do-you-determine-eligibility-harvard-scholarships",
+        "testing_policy": "https://college.harvard.edu/admissions/apply/application-requirements",
+        "english_requirements": "https://college.harvard.edu/admissions/apply/international-applicants",
+        "deadlines": "https://college.harvard.edu/admissions/apply/first-year-applicants",
+        "programs": "https://college.harvard.edu/academics/liberal-arts-sciences/dual-programs-study-music",
         "common_data_set": null
       },
       "discovery": {
-        "status": "pending",
-        "lastAttemptedAt": null,
-        "notes": "No discovery run yet. Requires outbound network access."
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T05:57:59.401Z",
+        "notes": "51 requests, 33 pages classified, 10/12 kinds found"
       }
     },
     {
