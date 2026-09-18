@@ -52,23 +52,23 @@
       ],
       "officialRootUrl": "https://mitadmissions.org",
       "pages": {
-        "admissions": null,
-        "international_admissions": null,
-        "tuition": null,
+        "admissions": "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+        "international_admissions": "https://mitadmissions.org/apply/firstyear/international/",
+        "tuition": "https://mitadmissions.org/afford/cost-aid-basics/access-affordability/",
         "cost_of_attendance": null,
-        "financial_aid": null,
-        "international_financial_aid": null,
+        "financial_aid": "https://mitadmissions.org/afford/cost-aid-basics/how-to-apply-for-aid/",
+        "international_financial_aid": "https://mitadmissions.org/apply/firstyear/international/",
         "scholarships": null,
-        "testing_policy": null,
-        "english_requirements": null,
-        "deadlines": null,
-        "programs": null,
+        "testing_policy": "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+        "english_requirements": "https://mitadmissions.org/apply/firstyear/tests-scores/",
+        "deadlines": "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+        "programs": "https://mitadmissions.org/discover/the-mit-education/majors-minors/",
         "common_data_set": null
       },
       "discovery": {
-        "status": "failed",
-        "lastAttemptedAt": "2026-09-17T17:50:36.243Z",
-        "notes": "48 requests, 0 pages classified, 0/12 kinds found"
+        "status": "partial",
+        "lastAttemptedAt": "2026-09-18T05:39:34.968Z",
+        "notes": "58 requests, 29 pages classified, 9/12 kinds found"
       }
     },
     {
